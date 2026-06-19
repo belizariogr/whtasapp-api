@@ -14,6 +14,9 @@ app.get('/status', async (c) => {
         ? await whatsappManager.verifyConnectionStatus(tenantId)
         : await whatsappManager.getConnectionInfo(tenantId);
 
+    if (info.status === 'logged_out') {
+        info.connectionStatus = 'disconnected';
+    }
     return jsonSuccess(c, info);
 });
 

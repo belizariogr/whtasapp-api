@@ -411,7 +411,7 @@ class WhatsAppConnectionManager {
             } else {
                 const { state } = await useDatabaseAuthState(tenantId);
                 if (!hasAuthenticatedCreds(state.creds)) {
-                    conn.loginStatus = 'logged_out';
+                    conn.loginStatus = 'logged_out';                    
                 }
                 await this.persistSession(tenantId, conn);
             }
@@ -630,7 +630,7 @@ class WhatsAppConnectionManager {
             resolvedPhoneNumber = null;
             return {
                 status: 'logged_out',
-                connectionStatus: this.resolveConnectionStatus(tenantId, conn),
+                connectionStatus: 'disconnected',
                 phoneNumber: null,
                 lastConnectedAt: null,
             };
