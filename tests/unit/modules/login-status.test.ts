@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { resolveLoginStatus } from '../../../src/modules/whatsapp/login-status.ts';
+import { resolveLoginStatus } from '../../../src/modules/login-status.ts';
 
 describe('modules/whatsapp/login-status', () => {
   test('logged_in requires credentials', () => {

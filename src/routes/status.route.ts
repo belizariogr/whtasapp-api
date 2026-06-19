@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import type { AuthVariables } from '../middleware/auth.ts';
 import { jsonSuccess } from '../utils/response.ts';
-import { whatsappManager } from '../modules/whatsapp/connection-manager.ts';
+import { whatsappManager } from '../modules/connection-manager.ts';
 import { isTruthyQueryParam } from '../utils/strings.ts';
 import { getTenantId } from '../core/services/helpers.ts';
 

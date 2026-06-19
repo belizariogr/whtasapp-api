@@ -16,7 +16,7 @@ mock.module('../../../src/modules/whatsapp/connection-manager', () => ({
 }));
 
 const { sendTextMessage, sendButtonsMessage, sendBulkMessage } = await import(
-  '../../../src/modules/whatsapp/message-sender.ts'
+  '../../../src/modules/message-sender.ts'
 );
 
 describe('modules/whatsapp/message-sender', () => {

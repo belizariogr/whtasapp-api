@@ -4,7 +4,7 @@ import {
   TenantAlreadyLoggedInError,
   WhatsAppNotLoggedInError,
   WhatsAppQrPendingError,
-} from '../../../src/modules/whatsapp/types';
+} from '../../../src/modules/types';
 
 describe('modules/whatsapp/errors', () => {
   test('WhatsAppNotLoggedInError is a WhatsAppApiError with 401', () => {

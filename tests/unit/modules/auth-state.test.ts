@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test';
 import { initAuthCreds } from '@whiskeysockets/baileys';
-import { hasAuthenticatedCreds } from '../../../src/modules/whatsapp/auth-state';
+import { hasAuthenticatedCreds } from '../../../src/modules/auth-state';
 
 describe('modules/whatsapp/auth-state', () => {
   test('hasAuthenticatedCreds is false for fresh creds', () => {

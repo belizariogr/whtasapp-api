@@ -1,4 +1,4 @@
-import { getDb } from '../../db/client.ts';
+import { getDb } from '../db/client.ts';
 import type { LoginStatus } from './types.ts';
 
 export interface WhatsAppSessionRecord {

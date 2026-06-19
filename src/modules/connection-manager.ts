@@ -1,4 +1,4 @@
-import '../../utils/libsignal-logs.ts';
+import '../utils/libsignal-logs.ts';
 import makeWASocket, {
     DisconnectReason,
     fetchLatestBaileysVersion,
@@ -6,7 +6,7 @@ import makeWASocket, {
     type WAMessage,
 } from '@whiskeysockets/baileys';
 import { Boom } from '@hapi/boom';
-import { env } from '../../config/env.ts';
+import { env } from '../config/env.ts';
 import { useDatabaseAuthState, hasAuthenticatedCreds } from './auth-state.ts';
 import {
     updateSessionState,

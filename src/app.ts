@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { logger } from 'hono/logger';
-import { isWhatsAppApiError } from './modules/whatsapp/types.ts';
+import { isWhatsAppApiError } from './modules/types.ts';
 import routes from './routes/index.ts';
 
 export function createApp() {

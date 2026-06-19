@@ -1,6 +1,6 @@
 import type { AnyMessageContent, WASocket } from '@whiskeysockets/baileys';
 import { whatsappManager } from './connection-manager.ts';
-import { toWhatsAppJid, toWhatsAppJids } from '../../utils/phone.ts';
+import { toWhatsAppJid, toWhatsAppJids } from '../utils/phone.ts';
 import type {
     SendBulkPayload,
     SendButtonsPayload,

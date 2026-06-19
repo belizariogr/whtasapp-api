@@ -5,7 +5,7 @@ import {
     type AuthenticationCreds,
     type SignalDataTypeMap,
 } from '@whiskeysockets/baileys';
-import { getDb } from '../../db/client.ts';
+import { getDb } from '../db/client.ts';
 
 export function hasAuthenticatedCreds(creds: AuthenticationCreds): boolean {
     return Boolean(creds.me?.id || creds.registered);

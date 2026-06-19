@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import type { AuthVariables } from '../middleware/auth.ts';
 import { jsonSuccess } from '../utils/response.ts';
-import { sendImageMessage } from '../modules/whatsapp/message-sender.ts';
+import { sendImageMessage } from '../modules/message-sender.ts';
 import { isValidPhoneNumber } from '../utils/phone.ts';
 import { getTenantId } from '../core/services/helpers.ts';
 
