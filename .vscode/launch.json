@@ -1,60 +1,60 @@
 {
-  "version": "0.2.0",
-  "configurations": [
-    {
-      "type": "bun",
-      "request": "launch",
-      "name": "Debug API",
-      "program": "${workspaceFolder}/src/index.ts",
-      "cwd": "${workspaceFolder}",
-      "envFile": "${workspaceFolder}/.env"
-    },
-    {
-      "type": "bun",
-      "request": "launch",
-      "name": "Debug API (watch)",
-      "program": "${workspaceFolder}/src/index.ts",
-      "cwd": "${workspaceFolder}",
-      "envFile": "${workspaceFolder}/.env",
-      "watchMode": true
-    },
-    {
-      "type": "bun",
-      "request": "launch",
-      "name": "Debug Migrate",
-      "program": "${workspaceFolder}/src/db/migrations/runner.ts",
-      "cwd": "${workspaceFolder}",
-      "envFile": "${workspaceFolder}/.env"
-    },
-    {
-      "type": "bun",
-      "request": "launch",
-      "name": "Debug Current File",
-      "program": "${file}",
-      "cwd": "${workspaceFolder}",
-      "envFile": "${workspaceFolder}/.env"
-    },
-    {
-      "type": "bun",
-      "request": "launch",
-      "name": "Debug Tests",
-      "runtimeArgs": ["test"],
-      "cwd": "${workspaceFolder}",
-      "envFile": "${workspaceFolder}/.env"
-    },
-    {
-      "type": "bun",
-      "request": "launch",
-      "name": "Debug Unit Tests",
-      "runtimeArgs": ["test", "tests/unit"],
-      "cwd": "${workspaceFolder}",
-      "envFile": "${workspaceFolder}/.env"
-    },
-    {
-      "type": "bun",
-      "request": "attach",
-      "name": "Attach to Bun",
-      "url": "ws://localhost:6499/"
-    }
-  ]
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "bun",
+            "request": "launch",
+            "name": "Debug API",
+            "program": "${workspaceFolder}/src/index.ts",
+            "cwd": "${workspaceFolder}",
+            "envFile": "${workspaceFolder}/.env"
+        },
+        {
+            "type": "bun",
+            "request": "launch",
+            "name": "Debug API (watch)",
+            "program": "${workspaceFolder}/src/index.ts",
+            "cwd": "${workspaceFolder}",
+            "envFile": "${workspaceFolder}/.env",
+            "watchMode": true
+        },
+        {
+            "type": "bun",
+            "request": "launch",
+            "name": "Debug Migrate",
+            "program": "${workspaceFolder}/src/db/migrations/runner.ts",
+            "cwd": "${workspaceFolder}",
+            "envFile": "${workspaceFolder}/.env"
+        },
+        {
+            "type": "bun",
+            "request": "launch",
+            "name": "Debug Current File",
+            "program": "${file}",
+            "cwd": "${workspaceFolder}",
+            "envFile": "${workspaceFolder}/.env"
+        },
+        {
+            "type": "bun",
+            "request": "launch",
+            "name": "Debug Tests",
+            "runtimeArgs": ["test"],
+            "cwd": "${workspaceFolder}",
+            "envFile": "${workspaceFolder}/.env"
+        },
+        {
+            "type": "bun",
+            "request": "launch",
+            "name": "Debug Unit Tests",
+            "runtimeArgs": ["test", "tests/unit"],
+            "cwd": "${workspaceFolder}",
+            "envFile": "${workspaceFolder}/.env"
+        },
+        {
+            "type": "bun",
+            "request": "attach",
+            "name": "Attach to Bun",
+            "url": "ws://localhost:6499/"
+        }
+    ]
 }

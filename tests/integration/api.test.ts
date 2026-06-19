@@ -3,71 +3,71 @@ import { createApp } from '../../src/app.ts';
 import { createTestToken } from '../helpers/jwt';
 
 describe('integration/whatsapp auth', () => {
-  const app = createApp();
+    const app = createApp();
 
-  test('rejects request without token', async () => {
-    const res = await app.request('/status');
-    expect(res.status).toBe(401);
-    const body = await res.json();
-    expect(body.success).toBe(false);
-    expect(body.error.code).toBe('UNAUTHORIZED');
-  });
-
-  test('rejects invalid token', async () => {
-    const res = await app.request('/status', {
-      headers: { Authorization: 'Bearer invalid.token' },
-    });
-    expect(res.status).toBe(401);
-  });
-
-  test('GET /status with valid token', async () => {
-    const token = createTestToken({ id: 999 });
-    const res = await app.request('/status', {
-      headers: { Authorization: `Bearer ${token}` },
+    test('rejects request without token', async () => {
+        const res = await app.request('/status');
+        expect(res.status).toBe(401);
+        const body = await res.json();
+        expect(body.success).toBe(false);
+        expect(body.error.code).toBe('UNAUTHORIZED');
     });
 
-    if (res.status === 500) {
-      // DB unavailable in CI/local without MariaDB
-      const body = await res.json();
-      expect(body.success).toBe(false);
-      return;
-    }
+    test('rejects invalid token', async () => {
+        const res = await app.request('/status', {
+            headers: { Authorization: 'Bearer invalid.token' },
+        });
+        expect(res.status).toBe(401);
+    });
 
-    expect(res.status).toBe(200);
-    const body = await res.json();
-    expect(body.success).toBe(true);
-    expect(body.data).toHaveProperty('status');
-    expect(body.data).toHaveProperty('connectionStatus');
-    expect(['logged_out', 'logged_in', 'qr_pending']).toContain(body.data.status);
-    expect(['disconnected', 'connecting', 'connected']).toContain(body.data.connectionStatus);
-  });
+    test('GET /status with valid token', async () => {
+        const token = createTestToken({ id: 999 });
+        const res = await app.request('/status', {
+            headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (res.status === 500) {
+            // DB unavailable in CI/local without MariaDB
+            const body = await res.json();
+            expect(body.success).toBe(false);
+            return;
+        }
+
+        expect(res.status).toBe(200);
+        const body = await res.json();
+        expect(body.success).toBe(true);
+        expect(body.data).toHaveProperty('status');
+        expect(body.data).toHaveProperty('connectionStatus');
+        expect(['logged_out', 'logged_in', 'qr_pending']).toContain(body.data.status);
+        expect(['disconnected', 'connecting', 'connected']).toContain(body.data.connectionStatus);
+    });
 });
 
 describe('integration/whatsapp validation', () => {
-  const app = createApp();
-  const token = createTestToken({ id: 999 });
+    const app = createApp();
+    const token = createTestToken({ id: 999 });
 
-  test('POST /messages/text validates payload', async () => {
-    const res = await app.request('/messages/text', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ to: 'invalid', text: '' }),
+    test('POST /messages/text validates payload', async () => {
+        const res = await app.request('/messages/text', {
+            method: 'POST',
+            headers: {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ to: 'invalid', text: '' }),
+        });
+        expect(res.status).toBe(400);
     });
-    expect(res.status).toBe(400);
-  });
 
-  test('POST /messages/bulk validates recipients', async () => {
-    const res = await app.request('/messages/bulk', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ recipients: [], message: { type: 'text' } }),
+    test('POST /messages/bulk validates recipients', async () => {
+        const res = await app.request('/messages/bulk', {
+            method: 'POST',
+            headers: {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ recipients: [], message: { type: 'text' } }),
+        });
+        expect(res.status).toBe(400);
     });
-    expect(res.status).toBe(400);
-  });
 });

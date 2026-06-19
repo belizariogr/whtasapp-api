@@ -1,327 +1,327 @@
 {
-  "info": {
-    "_postman_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
-    "name": "WhatsApp API",
-    "description": "Multi-tenant WhatsApp API (Bun + Hono + Baileys 7).\n\n## Setup\n\n1. Import this collection into Postman.\n2. Edit the collection variables:\n   - `baseUrl` — Server URL (default: `http://localhost:6000`)\n   - `jwtToken` — Valid JWT issued by the authentication microservice\n   - `recipientPhone` — Recipient phone number (format: `5511999999999`)\n\nAll routes use Bearer Token automatically via the `jwtToken` variable.",
-    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
-  },
-  "auth": {
-    "type": "bearer",
-    "bearer": [
-      {
-        "key": "token",
-        "value": "{{jwtToken}}",
-        "type": "string"
-      }
+    "info": {
+        "_postman_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+        "name": "WhatsApp API",
+        "description": "Multi-tenant WhatsApp API (Bun + Hono + Baileys 7).\n\n## Setup\n\n1. Import this collection into Postman.\n2. Edit the collection variables:\n   - `baseUrl` — Server URL (default: `http://localhost:6000`)\n   - `jwtToken` — Valid JWT issued by the authentication microservice\n   - `recipientPhone` — Recipient phone number (format: `5511999999999`)\n\nAll routes use Bearer Token automatically via the `jwtToken` variable.",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "auth": {
+        "type": "bearer",
+        "bearer": [
+            {
+                "key": "token",
+                "value": "{{jwtToken}}",
+                "type": "string"
+            }
+        ]
+    },
+    "variable": [
+        {
+            "key": "baseUrl",
+            "value": "http://localhost:6000",
+            "type": "string"
+        },
+        {
+            "key": "jwtToken",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "recipientPhone",
+            "value": "5511999999999",
+            "type": "string"
+        }
+    ],
+    "item": [
+        {
+            "name": "Connection",
+            "item": [
+                {
+                    "name": "Login",
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/login",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["login"]
+                        },
+                        "description": "Starts WhatsApp login. Default (`type=img` or omitted): returns PNG image. `?type=json`: returns `{ \"qrCode\": \"<base64>\" }`. Returns 409 if the tenant is already logged in."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Status",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/status",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["status"]
+                        },
+                        "description": "Returns the tenant WhatsApp connection status."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Logout",
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/logout",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["logout"]
+                        },
+                        "description": "Full logout — removes credentials from the database."
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Messages",
+            "item": [
+                {
+                    "name": "Text",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"to\": \"{{recipientPhone}}\",\n  \"text\": \"Hello! Test message.\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/messages/text",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["messages", "text"]
+                        },
+                        "description": "Sends a plain text message."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Link (with preview)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"to\": \"{{recipientPhone}}\",\n  \"text\": \"Check out our website: https://example.com\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/messages/link",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["messages", "link"]
+                        },
+                        "description": "Sends text with a link (automatic preview)."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Image (URL)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"to\": \"{{recipientPhone}}\",\n  \"imageUrl\": \"https://example.com/photo.jpg\",\n  \"caption\": \"Optional caption\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/messages/image",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["messages", "image"]
+                        },
+                        "description": "Sends an image via public URL."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Image (base64)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"to\": \"{{recipientPhone}}\",\n  \"imageBase64\": \"<paste-base64-here>\",\n  \"caption\": \"Optional caption\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/messages/image",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["messages", "image"]
+                        },
+                        "description": "Sends an image via base64 (no data URI prefix)."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Buttons (quick reply)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"to\": \"{{recipientPhone}}\",\n  \"text\": \"Choose an option:\",\n  \"footer\": \"Optional\",\n  \"buttons\": [\n    { \"id\": \"yes\", \"text\": \"Yes\" },\n    { \"id\": \"no\", \"text\": \"No\" }\n  ]\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/messages/buttons",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["messages", "buttons"]
+                        },
+                        "description": "Sends a message with quick reply buttons."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Link button (CTA URL)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"to\": \"{{recipientPhone}}\",\n  \"text\": \"Visit our website\",\n  \"footer\": \"Optional\",\n  \"buttonText\": \"Open website\",\n  \"url\": \"https://example.com\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/messages/link-button",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["messages", "link-button"]
+                        },
+                        "description": "Sends a message with an external link button."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Bulk — Text",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"recipients\": [\"5511111111111\", \"5522222222222\"],\n  \"message\": {\n    \"type\": \"text\",\n    \"text\": \"Message for everyone\"\n  }\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/messages/bulk",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["messages", "bulk"]
+                        },
+                        "description": "Bulk send — type `text`."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Bulk — Image",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"recipients\": [\"5511111111111\", \"5522222222222\"],\n  \"message\": {\n    \"type\": \"image\",\n    \"imageUrl\": \"https://example.com/photo.jpg\",\n    \"caption\": \"Caption\"\n  }\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/messages/bulk",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["messages", "bulk"]
+                        },
+                        "description": "Bulk send — type `image`. Supported types: `text`, `link`, `image`, `buttons`, `link_button`."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Last received message",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/messages/last-received",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["messages", "last-received"]
+                        },
+                        "description": "Returns the last received message (for testing)."
+                    },
+                    "response": []
+                }
+            ]
+        }
     ]
-  },
-  "variable": [
-    {
-      "key": "baseUrl",
-      "value": "http://localhost:6000",
-      "type": "string"
-    },
-    {
-      "key": "jwtToken",
-      "value": "",
-      "type": "string"
-    },
-    {
-      "key": "recipientPhone",
-      "value": "5511999999999",
-      "type": "string"
-    }
-  ],
-  "item": [
-    {
-      "name": "Connection",
-      "item": [
-        {
-          "name": "Login",
-          "request": {
-            "method": "POST",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/login",
-              "host": ["{{baseUrl}}"],
-              "path": ["login"]
-            },
-            "description": "Starts WhatsApp login. Default (`type=img` or omitted): returns PNG image. `?type=json`: returns `{ \"qrCode\": \"<base64>\" }`. Returns 409 if the tenant is already logged in."
-          },
-          "response": []
-        },
-        {
-          "name": "Status",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/status",
-              "host": ["{{baseUrl}}"],
-              "path": ["status"]
-            },
-            "description": "Returns the tenant WhatsApp connection status."
-          },
-          "response": []
-        },
-        {
-          "name": "Logout",
-          "request": {
-            "method": "POST",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/logout",
-              "host": ["{{baseUrl}}"],
-              "path": ["logout"]
-            },
-            "description": "Full logout — removes credentials from the database."
-          },
-          "response": []
-        }
-      ]
-    },
-    {
-      "name": "Messages",
-      "item": [
-        {
-          "name": "Text",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"to\": \"{{recipientPhone}}\",\n  \"text\": \"Hello! Test message.\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{baseUrl}}/messages/text",
-              "host": ["{{baseUrl}}"],
-              "path": ["messages", "text"]
-            },
-            "description": "Sends a plain text message."
-          },
-          "response": []
-        },
-        {
-          "name": "Link (with preview)",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"to\": \"{{recipientPhone}}\",\n  \"text\": \"Check out our website: https://example.com\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{baseUrl}}/messages/link",
-              "host": ["{{baseUrl}}"],
-              "path": ["messages", "link"]
-            },
-            "description": "Sends text with a link (automatic preview)."
-          },
-          "response": []
-        },
-        {
-          "name": "Image (URL)",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"to\": \"{{recipientPhone}}\",\n  \"imageUrl\": \"https://example.com/photo.jpg\",\n  \"caption\": \"Optional caption\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{baseUrl}}/messages/image",
-              "host": ["{{baseUrl}}"],
-              "path": ["messages", "image"]
-            },
-            "description": "Sends an image via public URL."
-          },
-          "response": []
-        },
-        {
-          "name": "Image (base64)",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"to\": \"{{recipientPhone}}\",\n  \"imageBase64\": \"<paste-base64-here>\",\n  \"caption\": \"Optional caption\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{baseUrl}}/messages/image",
-              "host": ["{{baseUrl}}"],
-              "path": ["messages", "image"]
-            },
-            "description": "Sends an image via base64 (no data URI prefix)."
-          },
-          "response": []
-        },
-        {
-          "name": "Buttons (quick reply)",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"to\": \"{{recipientPhone}}\",\n  \"text\": \"Choose an option:\",\n  \"footer\": \"Optional\",\n  \"buttons\": [\n    { \"id\": \"yes\", \"text\": \"Yes\" },\n    { \"id\": \"no\", \"text\": \"No\" }\n  ]\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{baseUrl}}/messages/buttons",
-              "host": ["{{baseUrl}}"],
-              "path": ["messages", "buttons"]
-            },
-            "description": "Sends a message with quick reply buttons."
-          },
-          "response": []
-        },
-        {
-          "name": "Link button (CTA URL)",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"to\": \"{{recipientPhone}}\",\n  \"text\": \"Visit our website\",\n  \"footer\": \"Optional\",\n  \"buttonText\": \"Open website\",\n  \"url\": \"https://example.com\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{baseUrl}}/messages/link-button",
-              "host": ["{{baseUrl}}"],
-              "path": ["messages", "link-button"]
-            },
-            "description": "Sends a message with an external link button."
-          },
-          "response": []
-        },
-        {
-          "name": "Bulk — Text",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"recipients\": [\"5511111111111\", \"5522222222222\"],\n  \"message\": {\n    \"type\": \"text\",\n    \"text\": \"Message for everyone\"\n  }\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{baseUrl}}/messages/bulk",
-              "host": ["{{baseUrl}}"],
-              "path": ["messages", "bulk"]
-            },
-            "description": "Bulk send — type `text`."
-          },
-          "response": []
-        },
-        {
-          "name": "Bulk — Image",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"recipients\": [\"5511111111111\", \"5522222222222\"],\n  \"message\": {\n    \"type\": \"image\",\n    \"imageUrl\": \"https://example.com/photo.jpg\",\n    \"caption\": \"Caption\"\n  }\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{baseUrl}}/messages/bulk",
-              "host": ["{{baseUrl}}"],
-              "path": ["messages", "bulk"]
-            },
-            "description": "Bulk send — type `image`. Supported types: `text`, `link`, `image`, `buttons`, `link_button`."
-          },
-          "response": []
-        },
-        {
-          "name": "Last received message",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/messages/last-received",
-              "host": ["{{baseUrl}}"],
-              "path": ["messages", "last-received"]
-            },
-            "description": "Returns the last received message (for testing)."
-          },
-          "response": []
-        }
-      ]
-    }
-  ]
 }

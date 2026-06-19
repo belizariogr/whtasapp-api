@@ -1,35 +1,35 @@
 {
-  "name": "whtasapp-api",
-  "version": "1.0.0",
-  "module": "src/index.ts",
-  "type": "module",
-  "private": true,
-  "scripts": {
-    "dev": "bun run --watch src/index.ts",
-    "start": "bun run src/index.ts",
-    "test": "bun test",
-    "test:unit": "bun test tests/unit",
-    "test:integration": "bun test tests/integration",
-    "test:action": "bun test tests/action",
-    "migrate": "bun run src/db/migrations/runner.ts"
-  },
-  "devDependencies": {
-    "@types/bun": "^1.3.14",
-    "@types/jsonwebtoken": "^9.0.10",
-    "@types/qrcode": "^1.5.6"
-  },
-  "peerDependencies": {
-    "typescript": "^5"
-  },
-  "dependencies": {
-    "@hapi/boom": "^10.0.1",
-    "@whiskeysockets/baileys": "^7.0.0-rc13",
-    "hono": "^4.12.26",
-    "jsonwebtoken": "^9.0.3",
-    "link-preview-js": "^4.0.3",
-    "qrcode": "^1.5.4"
-  },
-  "engines": {
-    "bun": ">=1.2.0"
-  }
+    "name": "whtasapp-api",
+    "version": "1.0.0",
+    "module": "src/index.ts",
+    "type": "module",
+    "private": true,
+    "scripts": {
+        "dev": "bun run --watch src/index.ts",
+        "start": "bun run src/index.ts",
+        "test": "bun test",
+        "test:unit": "bun test tests/unit",
+        "test:integration": "bun test tests/integration",
+        "test:action": "bun test tests/action",
+        "migrate": "bun run src/db/migrations/runner.ts"
+    },
+    "devDependencies": {
+        "@types/bun": "^1.3.14",
+        "@types/jsonwebtoken": "^9.0.10",
+        "@types/qrcode": "^1.5.6"
+    },
+    "peerDependencies": {
+        "typescript": "^5"
+    },
+    "dependencies": {
+        "@hapi/boom": "^10.0.1",
+        "@whiskeysockets/baileys": "^7.0.0-rc13",
+        "hono": "^4.12.26",
+        "jsonwebtoken": "^9.0.3",
+        "link-preview-js": "^4.0.3",
+        "qrcode": "^1.5.4"
+    },
+    "engines": {
+        "bun": ">=1.2.0"
+    }
 }
