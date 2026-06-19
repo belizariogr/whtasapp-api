@@ -15,7 +15,7 @@ import {
 } from '../modules/whatsapp/message-sender.ts';
 import { getLastReceivedMessage } from '../modules/whatsapp/session-repository.ts';
 import { isValidPhoneNumber } from '../utils/phone.ts';
-import { isNonEmptyString } from '../utils/strings.ts';
+import { isNonEmptyString, isTruthyQueryParam } from '../utils/strings.ts';
 
 const app = new Hono<{ Variables: AuthVariables }>();
 
@@ -65,7 +65,10 @@ app.post('/logout', async (c) => {
 
 app.get('/status', async (c) => {
   const tenantId = getTenantId(c);
-  const info = await whatsappManager.getConnectionInfo(tenantId);
+  const verify = isTruthyQueryParam(c.req.query('all'));
+  const info = verify
+    ? await whatsappManager.verifyConnectionStatus(tenantId)
+    : await whatsappManager.getConnectionInfo(tenantId);
 
   if (info.qrCode) {
     return jsonSuccess(c, {

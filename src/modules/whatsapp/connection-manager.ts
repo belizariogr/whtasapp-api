@@ -187,7 +187,7 @@ class WhatsAppConnectionManager {
                 version,
                 auth: state,
                 logger: baileysLogger,
-                browser: Browsers.baileys(env.whatsappBrowserName),
+                browser: [env.whatsappBrowserName, "Google Chrome", "1.0.0"],
                 printQRInTerminal: false,
                 generateHighQualityLinkPreview: true,
                 syncFullHistory: false,
@@ -422,7 +422,7 @@ class WhatsAppConnectionManager {
                     return;
                 }
 
-                if (conn.status === 'logged_out') {
+                if (conn.status === 'logged_out' || conn.status === 'disconnected') {
                     reject(new WhatsAppNotLoggedInError());
                     return;
                 }
@@ -453,6 +453,31 @@ class WhatsAppConnectionManager {
             this.connectPromises.has(tenantId) ||
             conn.reconnectTimer !== null
         );
+    }
+
+    async verifyConnectionStatus(tenantId: number): Promise<ConnectionInfo> {
+        const conn = this.getOrCreate(tenantId);
+
+        if (conn.socket && conn.status === 'connected') {
+            return this.getConnectionInfo(tenantId);
+        }
+
+        const { state } = await useDatabaseAuthState(tenantId);
+        if (!hasAuthenticatedCreds(state.creds)) {
+            return this.getConnectionInfo(tenantId);
+        }
+
+        if (conn.status === 'logged_out') {
+            conn.status = 'disconnected';
+        }
+
+        try {
+            await this.connect(tenantId);
+        } catch {
+            // Timeout or transient failure — return best-known status.
+        }
+
+        return this.getConnectionInfo(tenantId);
     }
 
     async getConnectionInfo(tenantId: number): Promise<ConnectionInfo> {
