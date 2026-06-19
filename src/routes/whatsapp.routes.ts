@@ -1,7 +1,8 @@
 import { Hono } from 'hono';
 import type { AuthVariables } from '../middleware/auth.ts';
 import { authMiddleware } from '../middleware/auth.ts';
-import { jsonSuccess } from '../utils/response.ts';
+import { jsonError, jsonSuccess } from '../utils/response.ts';
+import { qrStringToPngBase64, qrStringToPngBuffer } from '../utils/qrcode.ts';
 import { whatsappManager } from '../modules/whatsapp/connection-manager.ts';
 import {
   sendBulkMessage,
@@ -25,8 +26,28 @@ function getTenantId(c: { get: (key: 'tenantId') => number }): number {
 
 app.post('/connect', async (c) => {
   const tenantId = getTenantId(c);
-  const info = await whatsappManager.connect(tenantId);
-  return jsonSuccess(c, info);
+
+  try {
+    const info = await whatsappManager.connect(tenantId);
+
+    if (info.status === 'qr_pending' && info.qrCode) {
+      const png = await qrStringToPngBuffer(info.qrCode);
+      return new Response(png, {
+        status: 200,
+        headers: {
+          'Content-Type': 'image/png',
+          'Cache-Control': 'no-store',
+          'X-Connection-Status': info.status,
+        },
+      });
+    }
+
+    return jsonSuccess(c, info);
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : 'Failed to start WhatsApp connection';
+    return jsonError(c, 'CONNECTION_ERROR', message, 503);
+  }
 });
 
 app.post('/disconnect', async (c) => {
@@ -44,6 +65,14 @@ app.post('/logout', async (c) => {
 app.get('/status', async (c) => {
   const tenantId = getTenantId(c);
   const info = await whatsappManager.getConnectionInfo(tenantId);
+
+  if (info.qrCode) {
+    return jsonSuccess(c, {
+      ...info,
+      qrCode: await qrStringToPngBase64(info.qrCode),
+    });
+  }
+
   return jsonSuccess(c, info);
 });
 

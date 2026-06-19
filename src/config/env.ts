@@ -23,6 +23,7 @@ export const env = {
   testTenantId: parseInt(optionalEnv('TEST_TENANT_ID', '0'), 10),
   testJwtToken: optionalEnv('TEST_JWT_TOKEN', ''),
   testRecipientPhone: optionalEnv('TEST_RECIPIENT_PHONE', ''),
+  whatsappBrowserName: optionalEnv('WHATSAPP_BROWSER_NAME', 'wpapi'),
 } as const;
 
 export { requireEnv, optionalEnv };
