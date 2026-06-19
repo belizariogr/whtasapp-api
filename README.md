@@ -111,10 +111,9 @@ Response:
 {
   "success": true,
   "data": {
-    "status": "qr_pending",
+    "status": "logged_out",
+    "connectionStatus": "connecting",
     "phoneNumber": null,
-    "qrCode": "2@...",
-    "isConnected": false,
     "lastConnectedAt": null
   }
 }

@@ -49,7 +49,9 @@ describe('integration/whatsapp auth', () => {
     const body = await res.json();
     expect(body.success).toBe(true);
     expect(body.data).toHaveProperty('status');
-    expect(body.data).toHaveProperty('isConnected');
+    expect(body.data).toHaveProperty('connectionStatus');
+    expect(['logged_out', 'logged_in', 'qr_pending']).toContain(body.data.status);
+    expect(['disconnected', 'connecting', 'connected']).toContain(body.data.connectionStatus);
   });
 });
 

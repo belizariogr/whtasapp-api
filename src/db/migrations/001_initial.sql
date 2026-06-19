@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS tenants (
 
 CREATE TABLE IF NOT EXISTS whatsapp_sessions (
   tenant_id BIGINT PRIMARY KEY,
-  status ENUM('disconnected', 'connecting', 'qr_pending', 'connected', 'logged_out') NOT NULL DEFAULT 'disconnected',
+  status ENUM('logged_out', 'logged_in', 'qr_pending') NOT NULL DEFAULT 'logged_out',
   phone_number VARCHAR(32) NULL,
   qr_code TEXT NULL,
   last_connected_at TIMESTAMP NULL,

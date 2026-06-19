@@ -1,15 +1,12 @@
-export type ConnectionStatus =
-  | 'disconnected'
-  | 'connecting'
-  | 'qr_pending'
-  | 'connected'
-  | 'logged_out';
+export type LoginStatus = 'logged_out' | 'logged_in' | 'qr_pending';
+
+export type SocketConnectionStatus = 'disconnected' | 'connecting' | 'connected';
 
 export interface ConnectionInfo {
-  status: ConnectionStatus;
+  status: LoginStatus;
+  connectionStatus: SocketConnectionStatus;
   phoneNumber: string | null;
-  qrCode: string | null;
-  isConnected: boolean;
+  qrCode?: string;
   lastConnectedAt: string | null;
 }
 
@@ -36,6 +33,15 @@ export class WhatsAppNotConnectedError extends WhatsAppApiError {
   constructor(message: string) {
     super('NOT_CONNECTED', message, 503);
     this.name = 'WhatsAppNotConnectedError';
+  }
+}
+
+export class WhatsAppQrPendingError extends WhatsAppApiError {
+  constructor(
+    message = 'Wait for the WhatsApp connection to complete before sending messages.',
+  ) {
+    super('QR_PENDING', message, 409);
+    this.name = 'WhatsAppQrPendingError';
   }
 }
 

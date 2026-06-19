@@ -70,13 +70,6 @@ app.get('/status', async (c) => {
     ? await whatsappManager.verifyConnectionStatus(tenantId)
     : await whatsappManager.getConnectionInfo(tenantId);
 
-  if (info.qrCode) {
-    return jsonSuccess(c, {
-      ...info,
-      qrCode: await qrStringToPngBase64(info.qrCode),
-    });
-  }
-
   return jsonSuccess(c, info);
 });
 

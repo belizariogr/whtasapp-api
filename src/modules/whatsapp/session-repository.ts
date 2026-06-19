@@ -1,18 +1,19 @@
 import { getDb } from '../../db/client.ts';
-
-export type SessionStatus =
-  | 'disconnected'
-  | 'connecting'
-  | 'qr_pending'
-  | 'connected'
-  | 'logged_out';
+import type { LoginStatus } from './types.ts';
 
 export interface WhatsAppSessionRecord {
   tenant_id: number;
-  status: SessionStatus;
+  status: LoginStatus;
   phone_number: string | null;
   qr_code: string | null;
   last_connected_at: Date | null;
+}
+
+export interface SessionStateUpdate {
+  status?: LoginStatus;
+  phone_number?: string | null;
+  qr_code?: string | null;
+  last_connected_at?: Date | null;
 }
 
 export async function ensureTenant(tenantId: number, name?: string): Promise<void> {
@@ -35,7 +36,7 @@ export async function getSession(tenantId: number): Promise<WhatsAppSessionRecor
   const row = rows[0]!;
   return {
     tenant_id: Number(row.tenant_id),
-    status: row.status as SessionStatus,
+    status: row.status as LoginStatus,
     phone_number: row.phone_number as string | null,
     qr_code: row.qr_code as string | null,
     last_connected_at: row.last_connected_at as Date | null,
@@ -52,7 +53,7 @@ export async function upsertSession(
     INSERT INTO whatsapp_sessions (tenant_id, status, phone_number, qr_code, last_connected_at)
     VALUES (
       ${tenantId},
-      ${data.status ?? 'disconnected'},
+      ${data.status ?? 'logged_out'},
       ${data.phone_number ?? null},
       ${data.qr_code ?? null},
       ${data.last_connected_at ?? null}
@@ -66,17 +67,11 @@ export async function upsertSession(
   `;
 }
 
-export async function updateSessionStatus(
+export async function updateSessionState(
   tenantId: number,
-  status: SessionStatus,
-  extras?: { phone_number?: string | null; qr_code?: string | null },
+  data: SessionStateUpdate,
 ): Promise<void> {
-  await upsertSession(tenantId, {
-    status,
-    phone_number: extras?.phone_number,
-    qr_code: extras?.qr_code,
-    last_connected_at: status === 'connected' ? new Date() : undefined,
-  });
+  await upsertSession(tenantId, data);
 }
 
 export async function clearSessionAuth(tenantId: number): Promise<void> {
@@ -84,7 +79,7 @@ export async function clearSessionAuth(tenantId: number): Promise<void> {
   await db`DELETE FROM whatsapp_auth_keys WHERE tenant_id = ${tenantId}`;
   await db`DELETE FROM whatsapp_auth_creds WHERE tenant_id = ${tenantId}`;
   await upsertSession(tenantId, {
-    status: 'disconnected',
+    status: 'logged_out',
     phone_number: null,
     qr_code: null,
   });

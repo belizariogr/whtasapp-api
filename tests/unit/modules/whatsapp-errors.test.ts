@@ -3,6 +3,7 @@ import {
   isWhatsAppApiError,
   TenantAlreadyLoggedInError,
   WhatsAppNotLoggedInError,
+  WhatsAppQrPendingError,
 } from '../../../src/modules/whatsapp/types';
 
 describe('modules/whatsapp/errors', () => {
@@ -17,6 +18,13 @@ describe('modules/whatsapp/errors', () => {
     const error = new TenantAlreadyLoggedInError();
     expect(isWhatsAppApiError(error)).toBe(true);
     expect(error.code).toBe('ALREADY_LOGGED_IN');
+    expect(error.statusCode).toBe(409);
+  });
+
+  test('WhatsAppQrPendingError is a WhatsAppApiError with 409', () => {
+    const error = new WhatsAppQrPendingError();
+    expect(isWhatsAppApiError(error)).toBe(true);
+    expect(error.code).toBe('QR_PENDING');
     expect(error.statusCode).toBe(409);
   });
 });

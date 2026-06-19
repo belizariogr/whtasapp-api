@@ -1,5 +1,4 @@
 import makeWASocket, {
-    Browsers,
     DisconnectReason,
     fetchLatestBaileysVersion,
     type WASocket,
@@ -9,21 +8,23 @@ import { Boom } from '@hapi/boom';
 import { env } from '../../config/env.ts';
 import { useDatabaseAuthState, hasAuthenticatedCreds } from './auth-state.ts';
 import {
-    updateSessionStatus,
+    updateSessionState,
     clearSessionAuth,
     saveReceivedMessage,
     getSession,
 } from './session-repository.ts';
-import type { ConnectionInfo, ConnectionStatus } from './types.ts';
+import type { ConnectionInfo, LoginStatus, SocketConnectionStatus } from './types.ts';
 import {
     TenantAlreadyLoggedInError,
     WhatsAppNotConnectedError,
     WhatsAppNotLoggedInError,
+    WhatsAppQrPendingError,
 } from './types.ts';
 
 interface TenantConnection {
     socket: WASocket | null;
-    status: ConnectionStatus;
+    loginStatus: LoginStatus;
+    connectionStatus: SocketConnectionStatus;
     qrCode: string | null;
     phoneNumber: string | null;
     connecting: boolean;
@@ -57,7 +58,8 @@ class WhatsAppConnectionManager {
         if (!conn) {
             conn = {
                 socket: null,
-                status: 'disconnected',
+                loginStatus: 'logged_out',
+                connectionStatus: 'disconnected',
                 qrCode: null,
                 phoneNumber: null,
                 connecting: false,
@@ -69,10 +71,44 @@ class WhatsAppConnectionManager {
         return conn;
     }
 
+    private async persistSession(
+        tenantId: number,
+        conn: TenantConnection,
+        extras?: {
+            phone_number?: string | null;
+            qr_code?: string | null;
+            connected?: boolean;
+        },
+    ): Promise<void> {
+        await updateSessionState(tenantId, {
+            status: conn.loginStatus,
+            phone_number: extras?.phone_number,
+            qr_code: extras?.qr_code,
+            last_connected_at: extras?.connected ? new Date() : undefined,
+        });
+    }
+
+    private async resetFailedQrLogin(tenantId: number, conn: TenantConnection): Promise<void> {
+        this.clearReconnectTimer(conn);
+        conn.loginStatus = 'logged_out';
+        conn.connectionStatus = 'disconnected';
+        conn.qrCode = null;
+        conn.phoneNumber = null;
+        conn.connecting = false;
+        await clearSessionAuth(tenantId);
+    }
+
+    private isFailedQrLogin(status: LoginStatus, connectionStatus: SocketConnectionStatus): boolean {
+        return status === 'qr_pending' && connectionStatus === 'disconnected';
+    }
+
     async connect(tenantId: number): Promise<ConnectionInfo> {
         const conn = this.getOrCreate(tenantId);
 
-        if (conn.socket && (conn.status === 'connected' || conn.status === 'connecting')) {
+        if (
+            conn.socket &&
+            (conn.connectionStatus === 'connected' || conn.connectionStatus === 'connecting')
+        ) {
             return this.getConnectionInfo(tenantId);
         }
 
@@ -97,12 +133,13 @@ class WhatsAppConnectionManager {
             throw new TenantAlreadyLoggedInError();
         }
 
-        const info = await this.connect(tenantId);
-        if (!info.qrCode) {
+        await this.connect(tenantId);
+        const qrCode = this.getOrCreate(tenantId).qrCode;
+        if (!qrCode) {
             throw new Error('Failed to generate WhatsApp QR code');
         }
 
-        return { qrCode: info.qrCode };
+        return { qrCode };
     }
 
     private clearReconnectTimer(conn: TenantConnection): void {
@@ -125,7 +162,8 @@ class WhatsAppConnectionManager {
 
         conn.connecting = true;
         this.clearReconnectTimer(conn);
-        await updateSessionStatus(tenantId, 'connecting');
+        conn.connectionStatus = 'connecting';
+        await this.persistSession(tenantId, conn);
 
         try {
             if (conn.socket) {
@@ -151,15 +189,17 @@ class WhatsAppConnectionManager {
             };
 
             const markConnected = async () => {
-                if (conn.status === 'connected') return;
+                if (conn.connectionStatus === 'connected') return;
                 clearSyncTimer();
-                conn.status = 'connected';
+                conn.loginStatus = 'logged_in';
+                conn.connectionStatus = 'connected';
                 conn.qrCode = null;
                 const userJid = socket.user?.id ?? null;
                 conn.phoneNumber = userJid ? userJid.split(':')[0] ?? userJid : null;
-                await updateSessionStatus(tenantId, 'connected', {
+                await this.persistSession(tenantId, conn, {
                     phone_number: conn.phoneNumber,
                     qr_code: null,
+                    connected: true,
                 });
             };
 
@@ -187,7 +227,7 @@ class WhatsAppConnectionManager {
                 version,
                 auth: state,
                 logger: baileysLogger,
-                browser: [env.whatsappBrowserName, "Google Chrome", "1.0.0"],
+                browser: [env.whatsappBrowserName, 'Google Chrome', '1.0.0'],
                 printQRInTerminal: false,
                 generateHighQualityLinkPreview: true,
                 syncFullHistory: false,
@@ -195,13 +235,13 @@ class WhatsAppConnectionManager {
             });
 
             conn.socket = socket;
-            conn.status = 'connecting';
+            conn.connectionStatus = 'connecting';
             conn.qrCode = null;
 
             socket.ev.on('creds.update', async (update) => {
                 await saveCreds();
                 if (
-                    conn.status === 'connecting' &&
+                    conn.connectionStatus === 'connecting' &&
                     typeof update.accountSyncCounter === 'number' &&
                     update.accountSyncCounter > 0
                 ) {
@@ -213,20 +253,22 @@ class WhatsAppConnectionManager {
                 const { connection, lastDisconnect, qr, isNewLogin } = update;
 
                 if (isNewLogin) {
-                    conn.status = 'connecting';
+                    conn.loginStatus = 'logged_in';
+                    conn.connectionStatus = 'connecting';
                     conn.qrCode = null;
-                    await updateSessionStatus(tenantId, 'connecting', { qr_code: null });
+                    await this.persistSession(tenantId, conn, { qr_code: null });
                 }
 
                 if (connection === 'connecting') {
-                    conn.status = 'connecting';
-                    await updateSessionStatus(tenantId, 'connecting');
+                    conn.connectionStatus = 'connecting';
+                    await this.persistSession(tenantId, conn);
                 }
 
                 if (qr) {
                     conn.qrCode = qr;
-                    conn.status = 'qr_pending';
-                    await updateSessionStatus(tenantId, 'qr_pending', { qr_code: qr });
+                    conn.loginStatus = 'qr_pending';
+                    conn.connectionStatus = 'connecting';
+                    await this.persistSession(tenantId, conn, { qr_code: qr });
                     await markReady();
                 }
 
@@ -238,8 +280,9 @@ class WhatsAppConnectionManager {
                     if ((state.creds.accountSyncCounter || 0) > 0) {
                         await markConnected();
                     } else {
-                        conn.status = 'connecting';
-                        await updateSessionStatus(tenantId, 'connecting', {
+                        conn.loginStatus = 'logged_in';
+                        conn.connectionStatus = 'connecting';
+                        await this.persistSession(tenantId, conn, {
                             phone_number: conn.phoneNumber,
                             qr_code: null,
                         });
@@ -261,24 +304,25 @@ class WhatsAppConnectionManager {
                     const statusCode = (lastDisconnect?.error as Boom | undefined)?.output?.statusCode;
                     const loggedOut = statusCode === DisconnectReason.loggedOut;
                     const restartRequired = statusCode === DisconnectReason.restartRequired;
-                    const waitingForQr = conn.status === 'qr_pending' || conn.status === 'connecting';
+                    const waitingForQr =
+                        conn.loginStatus === 'qr_pending' || conn.connectionStatus === 'connecting';
 
                     conn.socket = null;
                     conn.connecting = false;
 
                     if (loggedOut) {
                         clearSyncTimer();
-                        conn.status = 'logged_out';
+                        conn.loginStatus = 'logged_out';
+                        conn.connectionStatus = 'disconnected';
                         conn.qrCode = null;
                         await clearSessionAuth(tenantId);
-                        await updateSessionStatus(tenantId, 'logged_out', { qr_code: null });
                         return;
                     }
 
                     if (restartRequired) {
-                        conn.status = 'connecting';
+                        conn.connectionStatus = 'connecting';
                         conn.qrCode = null;
-                        await updateSessionStatus(tenantId, 'connecting', { qr_code: null });
+                        await this.persistSession(tenantId, conn, { qr_code: null });
                         setImmediate(() => {
                             this.connect(tenantId).catch(() => undefined);
                         });
@@ -286,22 +330,25 @@ class WhatsAppConnectionManager {
                     }
 
                     if (waitingForQr) {
-                        if (conn.qrCode) {
-                            conn.status = 'qr_pending';
-                        } else if (conn.status !== 'connecting') {
+                        if (conn.qrCode || conn.loginStatus === 'qr_pending') {
                             clearSyncTimer();
-                            conn.status = 'disconnected';
-                            await updateSessionStatus(tenantId, 'disconnected', { qr_code: null });
+                            await this.resetFailedQrLogin(tenantId, conn);
+                        } else if (conn.connectionStatus !== 'connecting') {
+                            clearSyncTimer();
+                            conn.loginStatus = wasRegistered ? 'logged_in' : 'logged_out';
+                            conn.connectionStatus = 'disconnected';
+                            await this.persistSession(tenantId, conn, { qr_code: null });
                         } else {
-                            await updateSessionStatus(tenantId, 'connecting', { qr_code: null });
+                            await this.persistSession(tenantId, conn, { qr_code: null });
                         }
                         return;
                     }
 
                     clearSyncTimer();
-                    conn.status = 'disconnected';
+                    conn.loginStatus = wasRegistered ? 'logged_in' : 'logged_out';
+                    conn.connectionStatus = 'disconnected';
                     conn.qrCode = null;
-                    await updateSessionStatus(tenantId, 'disconnected', { qr_code: null });
+                    await this.persistSession(tenantId, conn, { qr_code: null });
 
                     if (wasRegistered) {
                         this.scheduleReconnect(tenantId, conn);
@@ -325,8 +372,16 @@ class WhatsAppConnectionManager {
             return await readyPromise;
         } catch (error) {
             conn.connecting = false;
-            conn.status = 'disconnected';
-            await updateSessionStatus(tenantId, 'disconnected');
+            conn.connectionStatus = 'disconnected';
+            if (conn.loginStatus === 'qr_pending') {
+                await this.resetFailedQrLogin(tenantId, conn);
+            } else {
+                const { state } = await useDatabaseAuthState(tenantId);
+                if (!hasAuthenticatedCreds(state.creds)) {
+                    conn.loginStatus = 'logged_out';
+                }
+                await this.persistSession(tenantId, conn);
+            }
             throw error;
         } finally {
             conn.connecting = false;
@@ -344,12 +399,12 @@ class WhatsAppConnectionManager {
             conn.socket = null;
         }
 
-        conn.status = 'disconnected';
+        conn.connectionStatus = 'disconnected';
         conn.qrCode = null;
         conn.phoneNumber = null;
         conn.connecting = false;
 
-        await updateSessionStatus(tenantId, 'disconnected', { qr_code: null });
+        await this.persistSession(tenantId, conn, { qr_code: null });
         return this.getConnectionInfo(tenantId);
     }
 
@@ -364,7 +419,8 @@ class WhatsAppConnectionManager {
         }
 
         await clearSessionAuth(tenantId);
-        conn.status = 'logged_out';
+        conn.loginStatus = 'logged_out';
+        conn.connectionStatus = 'disconnected';
         conn.qrCode = null;
         conn.phoneNumber = null;
 
@@ -378,8 +434,13 @@ class WhatsAppConnectionManager {
     async ensureConnected(tenantId: number): Promise<WASocket> {
         const conn = this.getOrCreate(tenantId);
 
-        if (conn.socket && conn.status === 'connected') {
+        if (conn.socket && conn.connectionStatus === 'connected') {
             return conn.socket;
+        }
+
+        const info = await this.getConnectionInfo(tenantId);
+        if (info.status === 'qr_pending' && info.connectionStatus === 'connecting') {
+            throw new WhatsAppQrPendingError();
         }
 
         const { state } = await useDatabaseAuthState(tenantId);
@@ -387,11 +448,11 @@ class WhatsAppConnectionManager {
             throw new WhatsAppNotLoggedInError();
         }
 
-        if (conn.status === 'logged_out') {
-            conn.status = 'disconnected';
+        if (conn.loginStatus === 'logged_out') {
+            conn.loginStatus = 'logged_in';
         }
 
-        if (!conn.socket || conn.status === 'disconnected') {
+        if (!conn.socket || conn.connectionStatus === 'disconnected') {
             await this.connect(tenantId);
         }
 
@@ -408,21 +469,17 @@ class WhatsAppConnectionManager {
             const poll = () => {
                 const conn = this.getOrCreate(tenantId);
 
-                if (conn.socket && conn.status === 'connected') {
+                if (conn.socket && conn.connectionStatus === 'connected') {
                     resolve(conn.socket);
                     return;
                 }
 
-                if (conn.status === 'qr_pending') {
-                    reject(
-                        new WhatsAppNotLoggedInError(
-                            'WhatsApp session requires QR pairing. Call POST /whatsapp/login first.',
-                        ),
-                    );
+                if (conn.loginStatus === 'qr_pending' && conn.connectionStatus === 'connecting') {
+                    reject(new WhatsAppQrPendingError());
                     return;
                 }
 
-                if (conn.status === 'logged_out' || conn.status === 'disconnected') {
+                if (conn.loginStatus === 'logged_out') {
                     reject(new WhatsAppNotLoggedInError());
                     return;
                 }
@@ -439,26 +496,62 @@ class WhatsAppConnectionManager {
         });
     }
 
-    private isActivelyConnecting(conn: TenantConnection): boolean {
-        return (
-            conn.socket !== null &&
-            (conn.status === 'connecting' || conn.status === 'qr_pending')
-        );
-    }
-
     private isConnectionInProgress(tenantId: number, conn: TenantConnection): boolean {
         return (
-            conn.status === 'connecting' ||
+            conn.connectionStatus === 'connecting' ||
             conn.connecting ||
             this.connectPromises.has(tenantId) ||
             conn.reconnectTimer !== null
         );
     }
 
+    private resolveConnectionStatus(
+        tenantId: number,
+        conn: TenantConnection,
+    ): SocketConnectionStatus {
+        if (conn.socket && conn.connectionStatus === 'connected') {
+            return 'connected';
+        }
+
+        if (this.isConnectionInProgress(tenantId, conn)) {
+            return 'connecting';
+        }
+
+        return 'disconnected';
+    }
+
+    private hasActiveLoginState(conn: TenantConnection, tenantId: number): boolean {
+        if (conn.socket !== null || this.isConnectionInProgress(tenantId, conn)) {
+            return true;
+        }
+
+        return conn.loginStatus === 'qr_pending' && conn.connectionStatus === 'connecting';
+    }
+
+    private reconcileLoginStatus(
+        status: LoginStatus,
+        hasCreds: boolean,
+        phoneNumber: string | null,
+    ): LoginStatus {
+        if (status === 'qr_pending') {
+            return 'qr_pending';
+        }
+
+        if (status === 'logged_out' && (hasCreds || phoneNumber)) {
+            return 'logged_in';
+        }
+
+        if (status === 'logged_in' && !hasCreds && !phoneNumber) {
+            return 'logged_out';
+        }
+
+        return status;
+    }
+
     async verifyConnectionStatus(tenantId: number): Promise<ConnectionInfo> {
         const conn = this.getOrCreate(tenantId);
 
-        if (conn.socket && conn.status === 'connected') {
+        if (conn.socket && conn.connectionStatus === 'connected') {
             return this.getConnectionInfo(tenantId);
         }
 
@@ -467,8 +560,8 @@ class WhatsAppConnectionManager {
             return this.getConnectionInfo(tenantId);
         }
 
-        if (conn.status === 'logged_out') {
-            conn.status = 'disconnected';
+        if (conn.loginStatus === 'logged_out') {
+            conn.loginStatus = 'logged_in';
         }
 
         try {
@@ -483,32 +576,36 @@ class WhatsAppConnectionManager {
     async getConnectionInfo(tenantId: number): Promise<ConnectionInfo> {
         const conn = this.getOrCreate(tenantId);
         const dbSession = await getSession(tenantId);
-        const activelyConnecting = this.isActivelyConnecting(conn);
 
-        let status: ConnectionStatus;
+        let status: LoginStatus;
 
-        if (conn.status !== 'disconnected' && conn.status !== 'logged_out') {
-            status = conn.status;
-        } else if (this.isConnectionInProgress(tenantId, conn)) {
-            status = 'connecting';
+        if (this.hasActiveLoginState(conn, tenantId)) {
+            status = conn.loginStatus;
         } else if (dbSession) {
-            status = dbSession.status as ConnectionStatus;
-            if (status === 'qr_pending' || status === 'connecting') {
-                status = 'disconnected';
-            }
+            status = dbSession.status;
         } else {
-            status = 'disconnected';
+            status = 'logged_out';
         }
 
-        if (!activelyConnecting && status === 'qr_pending') {
-            status = 'disconnected';
+        const phoneNumber = conn.phoneNumber ?? dbSession?.phone_number ?? null;
+        const connectionStatus = this.resolveConnectionStatus(tenantId, conn);
+
+        const { state } = await useDatabaseAuthState(tenantId);
+        const hasCreds = hasAuthenticatedCreds(state.creds);
+
+        status = this.reconcileLoginStatus(status, hasCreds, phoneNumber);
+
+        let resolvedPhoneNumber = phoneNumber;
+        if (this.isFailedQrLogin(status, connectionStatus)) {
+            await this.resetFailedQrLogin(tenantId, conn);
+            status = 'logged_out';
+            resolvedPhoneNumber = null;
         }
 
         return {
             status,
-            phoneNumber: conn.phoneNumber ?? dbSession?.phone_number ?? null,
-            qrCode: activelyConnecting && conn.status === 'qr_pending' ? conn.qrCode : null,
-            isConnected: status === 'connected' && conn.socket !== null,
+            connectionStatus: this.resolveConnectionStatus(tenantId, conn),
+            phoneNumber: resolvedPhoneNumber,
             lastConnectedAt: dbSession?.last_connected_at
                 ? new Date(dbSession.last_connected_at).toISOString()
                 : null,
@@ -536,7 +633,7 @@ class WhatsAppConnectionManager {
     /** Expõe conexões ativas — útil para testes */
     hasActiveConnection(tenantId: number): boolean {
         const conn = this.connections.get(tenantId);
-        return !!conn?.socket && conn.status === 'connected';
+        return !!conn?.socket && conn.connectionStatus === 'connected';
     }
 }
 
