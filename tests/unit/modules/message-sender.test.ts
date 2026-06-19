@@ -20,7 +20,6 @@ mock.module('../../../src/modules/connection-manager.ts', () => ({
 
 const {
     sendTextMessage,
-    sendButtonsMessage,
     sendLinkButtonMessage,
     sendBulkMessage,
     sendImageMessage,
@@ -43,51 +42,6 @@ describe('modules/whatsapp/message-sender', () => {
         expect(mockRelayMessage).toHaveBeenCalledTimes(0);
     });
 
-    test('sendButtonsMessage uses relayMessage with quick_reply buttons', async () => {
-        await sendButtonsMessage(1, {
-            to: '5511999999999',
-            text: 'Como posso ajudar?',
-            footer: 'Thinksoft ERP',
-            buttons: [
-                { id: 'financeiro', text: 'Financeiro' },
-                { id: 'suporte', text: 'Suporte' },
-            ],
-        });
-
-        expect(mockRelayMessage).toHaveBeenCalledTimes(1);
-        expect(mockSendMessage).toHaveBeenCalledTimes(0);
-
-        const [, message, options] = mockRelayMessage.mock.calls[0]!;
-        expect(message?.interactiveMessage?.body?.text).toBe('Como posso ajudar?');
-        expect(message?.interactiveMessage?.footer?.text).toBe('Thinksoft ERP');
-
-        const buttons = message?.interactiveMessage?.nativeFlowMessage?.buttons ?? [];
-        expect(buttons).toHaveLength(2);
-        expect(buttons[0]?.name).toBe('quick_reply');
-        expect(JSON.parse(buttons[0]?.buttonParamsJson ?? '{}')).toEqual({
-            display_text: 'Financeiro',
-            id: 'financeiro',
-        });
-        expect(options?.additionalNodes?.some((node) => node.tag === 'biz')).toBe(true);
-        expect(options?.additionalNodes?.some((node) => node.tag === 'bot')).toBe(true);
-    });
-
-    test('sendButtonsMessage supports mixed quick reply and cta_url buttons', async () => {
-        await sendButtonsMessage(1, {
-            to: '5511999999999',
-            text: 'Escolha uma opção:',
-            buttons: [
-                { id: 'vendas', text: 'Falar com vendedor' },
-                { id: 'site', text: 'Visitar site', url: 'https://meusite.com.br' },
-            ],
-        });
-
-        const [, message] = mockRelayMessage.mock.calls[0]!;
-        const buttons = message?.interactiveMessage?.nativeFlowMessage?.buttons ?? [];
-        expect(buttons[0]?.name).toBe('quick_reply');
-        expect(buttons[1]?.name).toBe('cta_url');
-    });
-
     test('sendLinkButtonMessage uses cta_url native flow button', async () => {
         await sendLinkButtonMessage(1, {
             to: '5511999999999',
@@ -98,7 +52,8 @@ describe('modules/whatsapp/message-sender', () => {
         });
 
         expect(mockRelayMessage).toHaveBeenCalledTimes(1);
-        const [, message] = mockRelayMessage.mock.calls[0]!;
+        expect(mockSendMessage).toHaveBeenCalledTimes(0);
+        const [, message, options] = mockRelayMessage.mock.calls[0]!;
         const button = message?.interactiveMessage?.nativeFlowMessage?.buttons?.[0];
         expect(button?.name).toBe('cta_url');
         expect(JSON.parse(button?.buttonParamsJson ?? '{}')).toMatchObject({
@@ -106,6 +61,8 @@ describe('modules/whatsapp/message-sender', () => {
             url: 'https://portal.seusite.com.br',
             merchant_url: 'https://portal.seusite.com.br',
         });
+        expect(options?.additionalNodes?.some((node) => node.tag === 'biz')).toBe(true);
+        expect(options?.additionalNodes?.some((node) => node.tag === 'bot')).toBe(true);
     });
 
     test('sendBulkMessage handles multiple recipients', async () => {

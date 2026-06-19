@@ -3,7 +3,6 @@ import type { AuthVariables } from '../middleware/auth.ts';
 import { jsonSuccess } from '../utils/response.ts';
 import { sendBulkMessage } from '../modules/message-sender.ts';
 import { isValidPhoneNumber } from '../utils/phone.ts';
-import { isNonEmptyString } from '../utils/strings.ts';
 import { getTenantId } from '../core/services/helpers.ts';
 
 const app = new Hono<{ Variables: AuthVariables }>();
@@ -18,7 +17,6 @@ app.post('/messages/bulk', async (c) => {
             imageBase64?: string;
             caption?: string;
             footer?: string;
-            buttons?: Array<{ id?: string; text?: string }>;
             buttonText?: string;
             url?: string;
         };
@@ -42,15 +40,12 @@ app.post('/messages/bulk', async (c) => {
     const results = await sendBulkMessage(getTenantId(c), {
         recipients: body.recipients,
         message: {
-            type: body.message.type as 'text' | 'link' | 'image' | 'buttons' | 'link_button',
+            type: body.message.type as 'text' | 'link' | 'image' | 'link_button',
             text: body.message.text,
             imageUrl: body.message.imageUrl,
             imageBase64: body.message.imageBase64,
             caption: body.message.caption,
             footer: body.message.footer,
-            buttons: body.message.buttons
-                ?.filter((b) => isNonEmptyString(b.text))
-                .map((b) => ({ id: b.id ?? b.text!, text: b.text! })),
             buttonText: body.message.buttonText,
             url: body.message.url,
         },

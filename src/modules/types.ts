@@ -73,19 +73,6 @@ export interface SendImagePayload {
     caption?: string;
 }
 
-export interface QuickReplyButton {
-    id: string;
-    text: string;
-    url?: string;
-}
-
-export interface SendButtonsPayload {
-    to: string;
-    text: string;
-    footer?: string;
-    buttons: QuickReplyButton[];
-}
-
 export interface SendLinkButtonPayload {
     to: string;
     text: string;
@@ -97,13 +84,12 @@ export interface SendLinkButtonPayload {
 export interface SendBulkPayload {
     recipients: string[];
     message: {
-        type: 'text' | 'link' | 'image' | 'buttons' | 'link_button';
+        type: 'text' | 'link' | 'image' | 'link_button';
         text?: string;
         imageUrl?: string;
         imageBase64?: string;
         caption?: string;
         footer?: string;
-        buttons?: QuickReplyButton[];
         buttonText?: string;
         url?: string;
     };

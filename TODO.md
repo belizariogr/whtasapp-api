@@ -7,7 +7,7 @@
 - [x] Migrations iniciais (`001_initial.sql`)
 - [x] Auth state Baileys persistido no MariaDB
 - [x] Connection manager (connect, disconnect, logout, status)
-- [x] Envio de mensagens: texto, link, imagem, botões, link-button, bulk
+- [x] Envio de mensagens: texto, link, imagem, link-button, bulk
 - [x] Recebimento básico de mensagens (salva em `received_messages`)
 - [x] Middleware JWT (validação via `token.ts` existente)
 - [x] Rotas separadas (`health.routes.ts`, `whatsapp.routes.ts`)
@@ -50,7 +50,7 @@ _Nenhum item no momento._
 - [ ] Melhorar parser de migrations (suporte a statements complexos)
 - [ ] Pool de conexões DB configurável via env
 - [ ] Testes E2E com MariaDB em container (CI)
-- [ ] Validar compatibilidade de botões interativos em contas Business vs pessoal
+- [ ] Validar compatibilidade do botão de link (cta_url) em contas Business vs pessoal
 
 ## Como usar este arquivo
 

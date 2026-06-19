@@ -9,7 +9,6 @@ REST API for WhatsApp integration via [Baileys 7](https://github.com/WhiskeySock
   - Text
   - Links (with preview)
   - Images (URL or base64)
-  - Quick reply buttons
   - External link button (CTA URL)
   - Bulk send to multiple contacts
 - Basic message receiving (for validation/testing)
@@ -111,7 +110,6 @@ The JWT payload `id` field identifies the **tenant**. Validation uses `src/core/
 | POST | `/messages/text` | Plain text |
 | POST | `/messages/link` | Text with link (preview) |
 | POST | `/messages/image` | Image (URL or base64) |
-| POST | `/messages/buttons` | Quick reply buttons |
 | POST | `/messages/link-button` | External link button |
 | POST | `/messages/bulk` | Send to multiple numbers |
 | GET | `/messages/last-received` | Last received message (tests) |
@@ -215,20 +213,6 @@ curl -X POST http://localhost:6000/logout \
 
 Or with base64: `"imageBase64": "<base64>"`
 
-#### Buttons — `POST /messages/buttons`
-
-```json
-{
-  "to": "5511999999999",
-  "text": "Choose:",
-  "footer": "Optional",
-  "buttons": [
-    { "id": "yes", "text": "Yes" },
-    { "id": "no", "text": "No" }
-  ]
-}
-```
-
 #### Link button — `POST /messages/link-button`
 
 ```json
@@ -253,7 +237,7 @@ Or with base64: `"imageBase64": "<base64>"`
 }
 ```
 
-Supported types in `message.type`: `text`, `link`, `image`, `buttons`, `link_button`.
+Supported types in `message.type`: `text`, `link`, `image`, `link_button`.
 
 #### Last received message — `GET /messages/last-received`
 

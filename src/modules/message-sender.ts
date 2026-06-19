@@ -2,13 +2,11 @@ import type { AnyMessageContent, WASocket } from '@whiskeysockets/baileys';
 import { whatsappManager } from './connection-manager.ts';
 import {
     buildCtaUrlButton,
-    buildNativeFlowButtons,
     sendInteractiveNativeFlowMessage,
 } from '../utils/interactive-message.ts';
 import { toWhatsAppJid, toWhatsAppJids } from '../utils/phone.ts';
 import type {
     SendBulkPayload,
-    SendButtonsPayload,
     SendImagePayload,
     SendLinkButtonPayload,
     SendLinkPayload,
@@ -84,27 +82,6 @@ export async function sendImageMessage(
     };
 }
 
-export async function sendButtonsMessage(
-    tenantId: number,
-    payload: SendButtonsPayload,
-): Promise<SendResult> {
-    const socket = await ensureConnected(tenantId);
-    const jid = toWhatsAppJid(payload.to);
-
-    const result = await sendInteractiveNativeFlowMessage(socket, jid, {
-        text: payload.text,
-        footer: payload.footer,
-        buttons: buildNativeFlowButtons(payload.buttons),
-    });
-
-    return {
-        to: payload.to,
-        jid,
-        messageId: result.key.id ?? undefined,
-        success: true,
-    };
-}
-
 export async function sendLinkButtonMessage(
     tenantId: number,
     payload: SendLinkButtonPayload,
@@ -158,14 +135,6 @@ export async function sendBulkMessage(
                         imageUrl: payload.message.imageUrl,
                         imageBase64: payload.message.imageBase64,
                         caption: payload.message.caption,
-                    });
-                    break;
-                case 'buttons':
-                    result = await sendButtonsMessage(tenantId, {
-                        to: recipient,
-                        text: payload.message.text ?? '',
-                        footer: payload.message.footer,
-                        buttons: payload.message.buttons ?? [],
                     });
                     break;
                 case 'link_button':

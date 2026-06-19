@@ -196,34 +196,6 @@
                     "response": []
                 },
                 {
-                    "name": "Buttons (quick reply)",
-                    "request": {
-                        "method": "POST",
-                        "header": [
-                            {
-                                "key": "Content-Type",
-                                "value": "application/json"
-                            }
-                        ],
-                        "body": {
-                            "mode": "raw",
-                            "raw": "{\n  \"to\": \"{{recipientPhone}}\",\n  \"text\": \"Choose an option:\",\n  \"footer\": \"Optional\",\n  \"buttons\": [\n    { \"id\": \"yes\", \"text\": \"Yes\" },\n    { \"id\": \"no\", \"text\": \"No\" }\n  ]\n}",
-                            "options": {
-                                "raw": {
-                                    "language": "json"
-                                }
-                            }
-                        },
-                        "url": {
-                            "raw": "{{baseUrl}}/messages/buttons",
-                            "host": ["{{baseUrl}}"],
-                            "path": ["messages", "buttons"]
-                        },
-                        "description": "Sends a message with quick reply buttons."
-                    },
-                    "response": []
-                },
-                {
                     "name": "Link button (CTA URL)",
                     "request": {
                         "method": "POST",
@@ -303,7 +275,7 @@
                             "host": ["{{baseUrl}}"],
                             "path": ["messages", "bulk"]
                         },
-                        "description": "Bulk send — type `image`. Supported types: `text`, `link`, `image`, `buttons`, `link_button`."
+                        "description": "Bulk send — type `image`. Supported types: `text`, `link`, `image`, `link_button`."
                     },
                     "response": []
                 },

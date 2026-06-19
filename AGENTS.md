@@ -32,7 +32,7 @@ Multi-tenant WhatsApp API built with **Bun**, **Hono**, and **Baileys 7** (`@whi
 
 - Version: `@whiskeysockets/baileys@7.0.0-rc13` (Baileys 7).
 - Sessions persisted in MariaDB (`auth-state.ts`), not loose files in production.
-- Interactive buttons: `interactiveButtons` with `quick_reply` and `cta_url`.
+- Interactive link button: `cta_url` via `nativeFlowMessage` + `relayMessage`.
 - Message receiving: minimal implementation for tests (`connection-manager.ts` → `received_messages`).
 
 ### Tests
@@ -88,7 +88,6 @@ tests/
 | POST | `/whatsapp/messages/text` | Plain text |
 | POST | `/whatsapp/messages/link` | Text with link (preview) |
 | POST | `/whatsapp/messages/image` | Image (URL or base64) |
-| POST | `/whatsapp/messages/buttons` | Quick reply buttons |
 | POST | `/whatsapp/messages/link-button` | External link button |
 | POST | `/whatsapp/messages/bulk` | Send to multiple numbers |
 | GET | `/whatsapp/messages/last-received` | Last received message (tests) |

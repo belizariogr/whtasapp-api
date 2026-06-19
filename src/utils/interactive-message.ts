@@ -1,7 +1,7 @@
 import {
     generateMessageIDV2,
     generateWAMessageFromContent,
-    jidDecode,
+    isJidGroup,
     proto,
     type BinaryNode,
     type WASocket,
@@ -33,13 +33,6 @@ const INTERACTIVE_NATIVE_FLOW_NODES: BinaryNode[] = [
     },
 ];
 
-export function buildQuickReplyButton(id: string, text: string): NativeFlowButton {
-    return {
-        name: 'quick_reply',
-        buttonParamsJson: JSON.stringify({ display_text: text, id }),
-    };
-}
-
 export function buildCtaUrlButton(displayText: string, url: string): NativeFlowButton {
     return {
         name: 'cta_url',
@@ -51,35 +44,6 @@ export function buildCtaUrlButton(displayText: string, url: string): NativeFlowB
     };
 }
 
-export function buildNativeFlowButton(button: {
-    id: string;
-    text: string;
-    url?: string;
-}): NativeFlowButton {
-    if (button.url) {
-        return buildCtaUrlButton(button.text, button.url);
-    }
-
-    return buildQuickReplyButton(button.id, button.text);
-}
-
-export function buildNativeFlowButtons(
-    buttons: Array<{ id: string; text: string; url?: string }>,
-): NativeFlowButton[] {
-    const seenIds = new Set<string>();
-
-    return buttons.map((button) => {
-        if (!button.url) {
-            if (seenIds.has(button.id)) {
-                throw new Error(`Duplicate quick reply button id: ${button.id}`);
-            }
-            seenIds.add(button.id);
-        }
-
-        return buildNativeFlowButton(button);
-    });
-}
-
 export function buildInteractiveMessageContent(
     input: InteractiveNativeFlowInput,
 ): proto.IMessage {
@@ -87,6 +51,7 @@ export function buildInteractiveMessageContent(
         body: { text: input.text.length > 0 ? input.text : ' ' },
         nativeFlowMessage: {
             buttons: input.buttons,
+            messageVersion: 1,
         },
     };
 
@@ -98,7 +63,7 @@ export function buildInteractiveMessageContent(
 }
 
 export function isPrivateChat(jid: string): boolean {
-    return jidDecode(jid)?.server === 's.whatsapp.net';
+    return !isJidGroup(jid);
 }
 
 export function buildInteractiveAdditionalNodes(jid: string): BinaryNode[] {
@@ -133,6 +98,7 @@ export async function sendInteractiveNativeFlowMessage(
     const fullMsg = generateWAMessageFromContent(jid, messageContent, {
         userJid,
         messageId,
+        timestamp: new Date(),
     });
 
     await socket.relayMessage(jid, fullMsg.message!, {
