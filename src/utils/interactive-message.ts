@@ -51,6 +51,35 @@ export function buildCtaUrlButton(displayText: string, url: string): NativeFlowB
     };
 }
 
+export function buildNativeFlowButton(button: {
+    id: string;
+    text: string;
+    url?: string;
+}): NativeFlowButton {
+    if (button.url) {
+        return buildCtaUrlButton(button.text, button.url);
+    }
+
+    return buildQuickReplyButton(button.id, button.text);
+}
+
+export function buildNativeFlowButtons(
+    buttons: Array<{ id: string; text: string; url?: string }>,
+): NativeFlowButton[] {
+    const seenIds = new Set<string>();
+
+    return buttons.map((button) => {
+        if (!button.url) {
+            if (seenIds.has(button.id)) {
+                throw new Error(`Duplicate quick reply button id: ${button.id}`);
+            }
+            seenIds.add(button.id);
+        }
+
+        return buildNativeFlowButton(button);
+    });
+}
+
 export function buildInteractiveMessageContent(
     input: InteractiveNativeFlowInput,
 ): proto.IMessage {

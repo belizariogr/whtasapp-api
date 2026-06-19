@@ -13,21 +13,31 @@ app.post('/messages/buttons', async (c) => {
         to?: string;
         text?: string;
         footer?: string;
-        buttons?: Array<{ id?: string; text?: string }>;
+        buttons?: Array<{ id?: string; text?: string; url?: string }>;
     }>();
     if (
         !isValidPhoneNumber(body.to) ||
         !isNonEmptyString(body.text) ||
-        !body.buttons?.length
+        !body.buttons?.length ||
+        !body.buttons.every((b) => isNonEmptyString(b.text) && (isNonEmptyString(b.url) || isNonEmptyString(b.id)))
     ) {
         return c.json(
-            { success: false, error: { code: 'VALIDATION_ERROR', message: 'Invalid payload for buttons message' } },
+            {
+                success: false,
+                error: {
+                    code: 'VALIDATION_ERROR',
+                    message:
+                        'Invalid payload for buttons message. Each button needs text and id (quick reply) or url (link button).',
+                },
+            },
             400,
         );
     }
-    const buttons = body.buttons
-        .filter((b) => isNonEmptyString(b.text))
-        .map((b) => ({ id: b.id ?? b.text!, text: b.text! }));
+    const buttons = body.buttons.map((b) => ({
+        id: b.id ?? b.text!,
+        text: b.text!,
+        url: b.url,
+    }));
 
     const result = await sendButtonsMessage(getTenantId(c), {
         to: body.to,

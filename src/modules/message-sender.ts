@@ -2,7 +2,7 @@ import type { AnyMessageContent, WASocket } from '@whiskeysockets/baileys';
 import { whatsappManager } from './connection-manager.ts';
 import {
     buildCtaUrlButton,
-    buildQuickReplyButton,
+    buildNativeFlowButtons,
     sendInteractiveNativeFlowMessage,
 } from '../utils/interactive-message.ts';
 import { toWhatsAppJid, toWhatsAppJids } from '../utils/phone.ts';
@@ -94,7 +94,7 @@ export async function sendButtonsMessage(
     const result = await sendInteractiveNativeFlowMessage(socket, jid, {
         text: payload.text,
         footer: payload.footer,
-        buttons: payload.buttons.map((btn) => buildQuickReplyButton(btn.id, btn.text)),
+        buttons: buildNativeFlowButtons(payload.buttons),
     });
 
     return {

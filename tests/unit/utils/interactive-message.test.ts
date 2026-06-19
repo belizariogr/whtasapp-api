@@ -3,6 +3,8 @@ import {
     buildCtaUrlButton,
     buildInteractiveAdditionalNodes,
     buildInteractiveMessageContent,
+    buildNativeFlowButton,
+    buildNativeFlowButtons,
     buildQuickReplyButton,
     isPrivateChat,
 } from '../../../src/utils/interactive-message.ts';
@@ -52,6 +54,31 @@ describe('utils/interactive-message', () => {
         const groupNodes = buildInteractiveAdditionalNodes('120363000000000000@g.us');
         expect(groupNodes.some((node) => node.tag === 'biz')).toBe(true);
         expect(groupNodes.some((node) => node.tag === 'bot')).toBe(false);
+    });
+
+    test('buildNativeFlowButton supports quick reply and cta_url', () => {
+        const quickReply = buildNativeFlowButton({ id: 'vendas', text: 'Falar com vendedor' });
+        expect(quickReply.name).toBe('quick_reply');
+        expect(JSON.parse(quickReply.buttonParamsJson)).toEqual({
+            display_text: 'Falar com vendedor',
+            id: 'vendas',
+        });
+
+        const cta = buildNativeFlowButton({
+            id: 'site',
+            text: 'Visitar site',
+            url: 'https://meusite.com.br',
+        });
+        expect(cta.name).toBe('cta_url');
+    });
+
+    test('buildNativeFlowButtons rejects duplicate quick reply ids', () => {
+        expect(() =>
+            buildNativeFlowButtons([
+                { id: 'a', text: 'A' },
+                { id: 'a', text: 'B' },
+            ]),
+        ).toThrow('Duplicate quick reply button id: a');
     });
 
     test('buildInteractiveAdditionalNodes includes native_flow metadata', () => {

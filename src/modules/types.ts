@@ -76,6 +76,7 @@ export interface SendImagePayload {
 export interface QuickReplyButton {
     id: string;
     text: string;
+    url?: string;
 }
 
 export interface SendButtonsPayload {

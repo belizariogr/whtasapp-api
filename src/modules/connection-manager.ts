@@ -7,6 +7,7 @@ import makeWASocket, {
 } from '@whiskeysockets/baileys';
 import { Boom } from '@hapi/boom';
 import { env } from '../config/env.ts';
+import { parseReceivedMessage } from '../utils/message-content.ts';
 import { useDatabaseAuthState, hasAuthenticatedCreds } from './auth-state.ts';
 import {
     updateSessionState,
@@ -653,15 +654,16 @@ class WhatsAppConnectionManager {
         const messageId = msg.key.id;
         if (!remoteJid || !messageId) return;
 
-        const content =
-            msg.message?.conversation ??
-            msg.message?.extendedTextMessage?.text ??
-            msg.message?.imageMessage?.caption ??
-            null;
+        const parsed = parseReceivedMessage(msg);
+        if (!parsed) return;
 
-        const messageType = Object.keys(msg.message ?? {})[0] ?? 'unknown';
-
-        await saveReceivedMessage(tenantId, remoteJid, messageId, messageType, content);
+        await saveReceivedMessage(
+            tenantId,
+            remoteJid,
+            messageId,
+            parsed.messageType,
+            parsed.content,
+        );
     }
 
     /** Expõe conexões ativas — útil para testes */
