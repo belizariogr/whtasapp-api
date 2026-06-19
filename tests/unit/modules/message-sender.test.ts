@@ -1,12 +1,15 @@
 import { describe, expect, test, mock, beforeEach } from 'bun:test';
 import type { WASocket } from '@whiskeysockets/baileys';
 
+const mockRelayMessage = mock(() => Promise.resolve('msg-123'));
 const mockSendMessage = mock(() =>
     Promise.resolve({ key: { id: 'msg-123' } }),
 );
 
 const mockSocket = {
     sendMessage: mockSendMessage,
+    relayMessage: mockRelayMessage,
+    user: { id: '5511888888888@s.whatsapp.net' },
 } as unknown as WASocket;
 
 mock.module('../../../src/modules/connection-manager.ts', () => ({
@@ -15,8 +18,13 @@ mock.module('../../../src/modules/connection-manager.ts', () => ({
     },
 }));
 
-const { sendTextMessage, sendButtonsMessage, sendBulkMessage, sendImageMessage } =
-    await import('../../../src/modules/message-sender.ts');
+const {
+    sendTextMessage,
+    sendButtonsMessage,
+    sendLinkButtonMessage,
+    sendBulkMessage,
+    sendImageMessage,
+} = await import('../../../src/modules/message-sender.ts');
 
 const TEST_IMAGE_BASE64 =
     'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
@@ -24,6 +32,7 @@ const TEST_IMAGE_BASE64 =
 describe('modules/whatsapp/message-sender', () => {
     beforeEach(() => {
         mockSendMessage.mockClear();
+        mockRelayMessage.mockClear();
     });
 
     test('sendTextMessage', async () => {
@@ -31,17 +40,46 @@ describe('modules/whatsapp/message-sender', () => {
         expect(result.success).toBe(true);
         expect(result.jid).toBe('5511999999999@s.whatsapp.net');
         expect(mockSendMessage).toHaveBeenCalledTimes(1);
+        expect(mockRelayMessage).toHaveBeenCalledTimes(0);
     });
 
-    test('sendButtonsMessage builds interactiveButtons', async () => {
+    test('sendButtonsMessage uses relayMessage with interactive nodes', async () => {
         await sendButtonsMessage(1, {
             to: '5511999999999',
             text: 'Choose',
+            footer: 'Footer',
             buttons: [{ id: 'a', text: 'Option A' }],
         });
-        expect(mockSendMessage).toHaveBeenCalledTimes(1);
-        const call = mockSendMessage.mock.calls[0];
-        expect(call).toBeDefined();
+
+        expect(mockRelayMessage).toHaveBeenCalledTimes(1);
+        expect(mockSendMessage).toHaveBeenCalledTimes(0);
+
+        const [, message, options] = mockRelayMessage.mock.calls[0]!;
+        expect(message?.interactiveMessage?.body?.text).toBe('Choose');
+        expect(message?.interactiveMessage?.footer?.text).toBe('Footer');
+        expect(message?.interactiveMessage?.nativeFlowMessage?.buttons?.[0]?.name).toBe('quick_reply');
+        expect(options?.additionalNodes?.some((node) => node.tag === 'biz')).toBe(true);
+        expect(options?.additionalNodes?.some((node) => node.tag === 'bot')).toBe(true);
+    });
+
+    test('sendLinkButtonMessage uses cta_url native flow button', async () => {
+        await sendLinkButtonMessage(1, {
+            to: '5511999999999',
+            text: 'Acesse nosso portal:',
+            footer: 'Thinksoft ERP',
+            buttonText: 'Abrir Portal',
+            url: 'https://portal.seusite.com.br',
+        });
+
+        expect(mockRelayMessage).toHaveBeenCalledTimes(1);
+        const [, message] = mockRelayMessage.mock.calls[0]!;
+        const button = message?.interactiveMessage?.nativeFlowMessage?.buttons?.[0];
+        expect(button?.name).toBe('cta_url');
+        expect(JSON.parse(button?.buttonParamsJson ?? '{}')).toMatchObject({
+            display_text: 'Abrir Portal',
+            url: 'https://portal.seusite.com.br',
+            merchant_url: 'https://portal.seusite.com.br',
+        });
     });
 
     test('sendBulkMessage handles multiple recipients', async () => {

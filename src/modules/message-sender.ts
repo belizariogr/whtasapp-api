@@ -1,5 +1,10 @@
 import type { AnyMessageContent, WASocket } from '@whiskeysockets/baileys';
 import { whatsappManager } from './connection-manager.ts';
+import {
+    buildCtaUrlButton,
+    buildQuickReplyButton,
+    sendInteractiveNativeFlowMessage,
+} from '../utils/interactive-message.ts';
 import { toWhatsAppJid, toWhatsAppJids } from '../utils/phone.ts';
 import type {
     SendBulkPayload,
@@ -13,16 +18,6 @@ import type {
 
 async function ensureConnected(tenantId: number): Promise<WASocket> {
     return whatsappManager.ensureConnected(tenantId);
-}
-
-function buildQuickReplyButtons(buttons: SendButtonsPayload['buttons']) {
-    return buttons.map((btn) => ({
-        name: 'quick_reply' as const,
-        buttonParamsJson: JSON.stringify({
-            display_text: btn.text,
-            id: btn.id,
-        }),
-    }));
 }
 
 export async function sendTextMessage(
@@ -96,16 +91,16 @@ export async function sendButtonsMessage(
     const socket = await ensureConnected(tenantId);
     const jid = toWhatsAppJid(payload.to);
 
-    const result = await socket.sendMessage(jid, {
+    const result = await sendInteractiveNativeFlowMessage(socket, jid, {
         text: payload.text,
         footer: payload.footer,
-        interactiveButtons: buildQuickReplyButtons(payload.buttons),
-    } as AnyMessageContent);
+        buttons: payload.buttons.map((btn) => buildQuickReplyButton(btn.id, btn.text)),
+    });
 
     return {
         to: payload.to,
         jid,
-        messageId: result?.key.id ?? undefined,
+        messageId: result.key.id ?? undefined,
         success: true,
     };
 }
@@ -117,25 +112,16 @@ export async function sendLinkButtonMessage(
     const socket = await ensureConnected(tenantId);
     const jid = toWhatsAppJid(payload.to);
 
-    const result = await socket.sendMessage(jid, {
+    const result = await sendInteractiveNativeFlowMessage(socket, jid, {
         text: payload.text,
         footer: payload.footer,
-        interactiveButtons: [
-            {
-                name: 'cta_url',
-                buttonParamsJson: JSON.stringify({
-                    display_text: payload.buttonText,
-                    url: payload.url,
-                    merchant_url: payload.url,
-                }),
-            },
-        ],
-    } as AnyMessageContent);
+        buttons: [buildCtaUrlButton(payload.buttonText, payload.url)],
+    });
 
     return {
         to: payload.to,
         jid,
-        messageId: result?.key.id ?? undefined,
+        messageId: result.key.id ?? undefined,
         success: true,
     };
 }
