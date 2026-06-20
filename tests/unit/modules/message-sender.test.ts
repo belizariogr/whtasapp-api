@@ -70,7 +70,7 @@ describe('modules/whatsapp/message-sender', () => {
     test('sendLinkMessage returns SendResult', async () => {
         const result = await sendLinkMessage(1, {
             to: testPhone,
-            text: 'https://example.com',
+            text: 'https://github.com/belizariogr/whatsapp-api',
         });
         expectSendResult(result);
         expect(mockSendMessage).toHaveBeenCalledTimes(1);
@@ -82,7 +82,7 @@ describe('modules/whatsapp/message-sender', () => {
             text: 'Acesse nosso portal:',
             footer: 'Thinksoft ERP',
             buttonText: 'Abrir Portal',
-            url: 'https://portal.seusite.com.br',
+            url: 'https://github.com/belizariogr/whatsapp-api',
         });
 
         expectGeneratedSendResult(result);
@@ -93,8 +93,8 @@ describe('modules/whatsapp/message-sender', () => {
         expect(button?.name).toBe('cta_url');
         expect(JSON.parse(button?.buttonParamsJson ?? '{}')).toMatchObject({
             display_text: 'Abrir Portal',
-            url: 'https://portal.seusite.com.br',
-            merchant_url: 'https://portal.seusite.com.br',
+            url: 'https://github.com/belizariogr/whatsapp-api',
+            merchant_url: 'https://github.com/belizariogr/whatsapp-api',
         });
         expect(options.additionalNodes?.some((node) => node.tag === 'biz')).toBe(true);
         expect(options.additionalNodes?.some((node) => node.tag === 'bot')).toBe(true);
@@ -112,7 +112,7 @@ describe('modules/whatsapp/message-sender', () => {
     test('sendBulkMessage handles link type', async () => {
         const results = await sendBulkMessage(1, {
             recipients: [testPhone],
-            message: { type: 'link', text: 'https://example.com' },
+            message: { type: 'link', text: 'https://github.com/belizariogr/whatsapp-api' },
         });
         expect(results).toHaveLength(1);
         expectSendResult(results[0]!);
@@ -123,7 +123,7 @@ describe('modules/whatsapp/message-sender', () => {
             recipients: [testPhone],
             message: {
                 type: 'image',
-                imageUrl: 'https://example.com/photo.jpg',
+                imageUrl: 'https://boagestao.com/_astro/logo.Cbk95yqq.svg',
                 caption: 'Bulk image',
             },
         });
@@ -138,7 +138,7 @@ describe('modules/whatsapp/message-sender', () => {
                 type: 'link_button',
                 text: 'Clique abaixo',
                 buttonText: 'Abrir',
-                url: 'https://example.com',
+                url: 'https://github.com/belizariogr/whatsapp-api',
             },
         });
         expect(results).toHaveLength(1);
@@ -148,14 +148,14 @@ describe('modules/whatsapp/message-sender', () => {
     test('sendImageMessage with imageUrl', async () => {
         const result = await sendImageMessage(1, {
             to: testPhone,
-            imageUrl: 'https://example.com/photo.jpg',
+            imageUrl: 'https://boagestao.com/_astro/logo.Cbk95yqq.svg',
             caption: 'Test caption',
         });
         expectSendResult(result);
         expect(mockSendMessage).toHaveBeenCalledTimes(1);
         const call = mockSendMessage.mock.calls[0] as [string, { image: { url: string }; caption: string }];
         expect(call[1]).toMatchObject({
-            image: { url: 'https://example.com/photo.jpg' },
+            image: { url: 'https://boagestao.com/_astro/logo.Cbk95yqq.svg' },
             caption: 'Test caption',
         });
     });
