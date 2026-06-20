@@ -17,6 +17,7 @@ export const env = {
     databaseUsername: optionalEnv('DATABASE_USER', optionalEnv('DATABASE_USERNAME', 'root')),
     databasePassword: optionalEnv('DATABASE_PASSWORD', ''),
     databaseName: optionalEnv('DATABASE_NAME', 'whatsapp_api'),
+    databasePoolMax: parseInt(optionalEnv('DATABASE_POOL_MAX', '10'), 10),
     jwtSecretKey: optionalEnv('JWT_SECRET_KEY', 'msdu8nbrdkdhe7'),
     jwtSecretPublicKey: optionalEnv('JWT_SECRET_KEY_PUBLIC', 'msdu8nbrdkdhe7++'),
     jwtAccessTokenTime: parseInt(optionalEnv('JWT_ACCESS_TOKEN_TIME', '10'), 10),

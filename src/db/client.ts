@@ -12,6 +12,7 @@ export function getDb(): SQL {
             username: env.databaseUsername,
             password: env.databasePassword,
             database: env.databaseName,
+            max: env.databasePoolMax,
             connectionTimeout: 5,
         });
     }

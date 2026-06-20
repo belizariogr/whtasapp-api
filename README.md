@@ -57,6 +57,7 @@ DATABASE_PORT=3306
 DATABASE_USER=user
 DATABASE_PASSWORD=password
 DATABASE_NAME=whatsapp_api
+DATABASE_POOL_MAX=10
 
 # Action tests (tenant with active WhatsApp connection)
 TEST_TENANT_ID=1
