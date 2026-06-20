@@ -2,7 +2,7 @@
     "info": {
         "_postman_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
         "name": "WhatsApp API",
-        "description": "Multi-tenant WhatsApp API (Bun + Hono + Baileys 7).\n\n## Setup\n\n1. Import this collection into Postman.\n2. Edit the collection variables:\n   - `baseUrl` — Server URL (default: `http://localhost:6000`)\n   - `jwtToken` — Valid JWT issued by the authentication microservice\n   - `recipientPhone` — Recipient phone number (format: `5511999999999`)\n\nAll routes use Bearer Token automatically via the `jwtToken` variable.",
+        "description": "Multi-tenant WhatsApp API (Bun + Hono + Baileys 7).\n\n## Setup\n\n1. Import this collection into Postman.\n2. Edit the collection variables:\n   - `baseUrl` — Server URL (default: `http://localhost:6000`)\n   - `jwtToken` — JWT for authenticated routes (use **Register** to obtain one automatically)\n   - `tenantId` — Tenant id (set automatically after **Register**)\n   - `recipientPhone` — Recipient phone number (format: `5511999999999`)\n\nMost routes use Bearer Token via the `jwtToken` variable. **Register** is public and saves `jwtToken` / `tenantId` from the response.",
         "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
     },
     "auth": {
@@ -27,12 +27,86 @@
             "type": "string"
         },
         {
+            "key": "tenantId",
+            "value": "",
+            "type": "string"
+        },
+        {
             "key": "recipientPhone",
             "value": "5511999999999",
             "type": "string"
         }
     ],
     "item": [
+        {
+            "name": "Tenant",
+            "item": [
+                {
+                    "name": "Register",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "if (pm.response.code === 201) {",
+                                    "    const json = pm.response.json();",
+                                    "    if (json.success && json.data.token) {",
+                                    "        pm.collectionVariables.set('jwtToken', json.data.token);",
+                                    "    }",
+                                    "    if (json.success && json.data.tenantId) {",
+                                    "        pm.collectionVariables.set('tenantId', String(json.data.tenantId));",
+                                    "    }",
+                                    "}"
+                                ]
+                            }
+                        }
+                    ],
+                    "request": {
+                        "auth": {
+                            "type": "noauth"
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"My tenant\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/register",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["register"]
+                        },
+                        "description": "Creates a tenant and returns a JWT without expiration. Saves `jwtToken` and `tenantId` collection variables on success. Body `name` is optional."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Unregister",
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/unregister",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["unregister"]
+                        },
+                        "description": "Removes the tenant from the database (and related WhatsApp data). Requires Bearer token."
+                    },
+                    "response": []
+                }
+            ]
+        },
         {
             "name": "Connection",
             "item": [

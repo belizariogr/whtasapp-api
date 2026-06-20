@@ -28,6 +28,10 @@ class Token {
             return false;
         }
     }
+
+    static sign(tenantId: number): string {
+        return JWT.sign({ id: tenantId }, secretKey);
+    }
 }
 
 export default Token;

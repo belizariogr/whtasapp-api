@@ -21,4 +21,16 @@ describe('core/services/token', () => {
         expect(decoded).toBeTruthy();
         expect(decoded && decoded.id).toBe(7);
     });
+
+    test('sign creates token without expiration', () => {
+        const token = Token.sign(99);
+        const payload = Token.verify(token);
+        expect(payload).toBeTruthy();
+        expect(payload && payload.id).toBe(99);
+        expect(payload && payload.exp).toBeUndefined();
+
+        const decoded = Token.decode(token);
+        expect(decoded).toBeTruthy();
+        expect(decoded && decoded.exp).toBeUndefined();
+    });
 });

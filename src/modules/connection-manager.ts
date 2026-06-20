@@ -671,6 +671,26 @@ class WhatsAppConnectionManager {
         const conn = this.connections.get(tenantId);
         return !!conn?.socket && conn.connectionStatus === 'connected';
     }
+
+    async removeTenant(tenantId: number): Promise<void> {
+        const conn = this.connections.get(tenantId);
+        if (!conn) return;
+
+        this.clearReconnectTimer(conn);
+
+        if (conn.socket) {
+            conn.replacingSocket = true;
+            try {
+                await conn.socket.logout();
+            } catch {
+                conn.socket.end(undefined);
+            }
+            conn.socket = null;
+        }
+
+        this.connections.delete(tenantId);
+        this.connectPromises.delete(tenantId);
+    }
 }
 
 export const whatsappManager = new WhatsAppConnectionManager();
