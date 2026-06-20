@@ -1,4 +1,4 @@
-#!/usr/bin/env /bin/bash
+#!/usr/bin/env bash
 
 cd $(dirname $0)
 BASE_DIR=$PWD
@@ -30,8 +30,6 @@ ssh $BACKEND_HOST "source .bashrc && cd $BACKEND_PATH && bun migrate"
 
 echo "Stopping docker container..."
 ssh $BACKEND_HOST "docker stop $IMAGE_NAME"
-
-ssh $BACKEND_HOST "cd $BACKEND_PATH && bun install"
 
 echo "Starting docker container..."
 ssh $BACKEND_HOST "cd $BACKEND_PATH && docker compose up -d"
