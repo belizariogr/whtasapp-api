@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'bun:test';
 import { initAuthCreds } from '@whiskeysockets/baileys';
 import { hasAuthenticatedCreds } from '../../../src/modules/auth-state';
+import { testJid } from '../../helpers/phone.ts';
 
 describe('modules/whatsapp/auth-state', () => {
     test('hasAuthenticatedCreds is false for fresh creds', () => {
@@ -9,7 +10,7 @@ describe('modules/whatsapp/auth-state', () => {
 
     test('hasAuthenticatedCreds is true when me.id exists (QR pairing)', () => {
         const creds = initAuthCreds();
-        creds.me = { id: '5511999999999@s.whatsapp.net', name: 'Test' };
+        creds.me = { id: testJid, name: 'Test' };
         expect(hasAuthenticatedCreds(creds)).toBe(true);
     });
 

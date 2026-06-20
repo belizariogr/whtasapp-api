@@ -5,27 +5,25 @@ import {
     toWhatsAppJid,
     toWhatsAppJids,
 } from '../../../src/utils/phone.ts';
+import { formatTestPhone, testJid, testPhone } from '../../helpers/phone.ts';
 
 describe('utils/phone', () => {
     test('normalizePhoneNumber removes non-digits', () => {
-        expect(normalizePhoneNumber('+55 (11) 99999-9999')).toBe('5511999999999');
+        expect(normalizePhoneNumber(formatTestPhone())).toBe(testPhone);
     });
 
     test('toWhatsAppJid', () => {
-        expect(toWhatsAppJid('5511999999999')).toBe('5511999999999@s.whatsapp.net');
+        expect(toWhatsAppJid(testPhone)).toBe(testJid);
     });
 
     test('isValidPhoneNumber', () => {
-        expect(isValidPhoneNumber('5511999999999')).toBe(true);
+        expect(isValidPhoneNumber(testPhone)).toBe(true);
         expect(isValidPhoneNumber('123')).toBe(false);
         expect(isValidPhoneNumber('')).toBe(false);
     });
 
     test('toWhatsAppJids', () => {
-        expect(toWhatsAppJids(['5511111111111', '5522222222222'])).toEqual([
-            '5511111111111@s.whatsapp.net',
-            '5522222222222@s.whatsapp.net',
-        ]);
+        expect(toWhatsAppJids([testPhone, testPhone])).toEqual([testJid, testJid]);
     });
 
     test('toWhatsAppJid throws on invalid phone', () => {

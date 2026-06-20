@@ -5,6 +5,7 @@ import {
     buildInteractiveMessageContent,
     isPrivateChat,
 } from '../../../src/utils/interactive-message.ts';
+import { testJid, testLid } from '../../helpers/phone.ts';
 
 describe('utils/interactive-message', () => {
     test('buildCtaUrlButton', () => {
@@ -30,13 +31,13 @@ describe('utils/interactive-message', () => {
     });
 
     test('isPrivateChat', () => {
-        expect(isPrivateChat('5511999999999@s.whatsapp.net')).toBe(true);
-        expect(isPrivateChat('5511999999999@lid')).toBe(true);
+        expect(isPrivateChat(testJid)).toBe(true);
+        expect(isPrivateChat(testLid)).toBe(true);
         expect(isPrivateChat('120363000000000000@g.us')).toBe(false);
     });
 
     test('buildInteractiveAdditionalNodes adds bot node for private chats', () => {
-        const privateNodes = buildInteractiveAdditionalNodes('5511999999999@s.whatsapp.net');
+        const privateNodes = buildInteractiveAdditionalNodes(testJid);
         expect(privateNodes.some((node) => node.tag === 'biz')).toBe(true);
         expect(privateNodes.some((node) => node.tag === 'bot')).toBe(true);
 

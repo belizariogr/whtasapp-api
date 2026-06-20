@@ -1,5 +1,6 @@
 import { describe, expect, test, mock, beforeEach } from 'bun:test';
 import type { WASocket } from '@whiskeysockets/baileys';
+import { testJid, testPhone } from '../../helpers/phone.ts';
 
 const mockRelayMessage = mock(() => Promise.resolve('msg-123'));
 const mockSendMessage = mock(() =>
@@ -9,7 +10,7 @@ const mockSendMessage = mock(() =>
 const mockSocket = {
     sendMessage: mockSendMessage,
     relayMessage: mockRelayMessage,
-    user: { id: '5511888888888@s.whatsapp.net' },
+    user: { id: testJid },
 } as unknown as WASocket;
 
 mock.module('../../../src/modules/connection-manager.ts', () => ({
@@ -35,16 +36,16 @@ describe('modules/whatsapp/message-sender', () => {
     });
 
     test('sendTextMessage', async () => {
-        const result = await sendTextMessage(1, { to: '5511999999999', text: 'Hello' });
+        const result = await sendTextMessage(1, { to: testPhone, text: 'Hello' });
         expect(result.success).toBe(true);
-        expect(result.jid).toBe('5511999999999@s.whatsapp.net');
+        expect(result.jid).toBe(testJid);
         expect(mockSendMessage).toHaveBeenCalledTimes(1);
         expect(mockRelayMessage).toHaveBeenCalledTimes(0);
     });
 
     test('sendLinkButtonMessage uses cta_url native flow button', async () => {
         await sendLinkButtonMessage(1, {
-            to: '5511999999999',
+            to: testPhone,
             text: 'Acesse nosso portal:',
             footer: 'Thinksoft ERP',
             buttonText: 'Abrir Portal',
@@ -67,7 +68,7 @@ describe('modules/whatsapp/message-sender', () => {
 
     test('sendBulkMessage handles multiple recipients', async () => {
         const results = await sendBulkMessage(1, {
-            recipients: ['5511111111111', '5522222222222'],
+            recipients: [testPhone, testPhone],
             message: { type: 'text', text: 'Bulk hello' },
         });
         expect(results).toHaveLength(2);
@@ -76,12 +77,12 @@ describe('modules/whatsapp/message-sender', () => {
 
     test('sendImageMessage with imageUrl', async () => {
         const result = await sendImageMessage(1, {
-            to: '5511999999999',
+            to: testPhone,
             imageUrl: 'https://example.com/photo.jpg',
             caption: 'Test caption',
         });
         expect(result.success).toBe(true);
-        expect(result.jid).toBe('5511999999999@s.whatsapp.net');
+        expect(result.jid).toBe(testJid);
         expect(mockSendMessage).toHaveBeenCalledTimes(1);
         const call = mockSendMessage.mock.calls[0];
         expect(call?.[1]).toMatchObject({
@@ -92,7 +93,7 @@ describe('modules/whatsapp/message-sender', () => {
 
     test('sendImageMessage with imageBase64', async () => {
         const result = await sendImageMessage(1, {
-            to: '5511999999999',
+            to: testPhone,
             imageBase64: TEST_IMAGE_BASE64,
         });
         expect(result.success).toBe(true);
