@@ -1,0 +1,9 @@
+services:
+    bg:
+        container_name: whatsapp-api
+        image: whatsapp-api
+        command: bun run start
+        restart: always
+        volumes:
+            - .:/usr/app
+        network_mode: host
