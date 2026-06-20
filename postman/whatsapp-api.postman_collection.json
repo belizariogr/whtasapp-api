@@ -2,7 +2,7 @@
     "info": {
         "_postman_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
         "name": "WhatsApp API",
-        "description": "Multi-tenant WhatsApp API (Bun + Hono + Baileys 7).\n\n## Setup\n\n1. Import this collection into Postman.\n2. Edit the collection variables:\n   - `baseUrl` — Server URL (default: `http://localhost:6000`)\n   - `jwtToken` — JWT for authenticated routes (use **Register** to obtain one automatically)\n   - `tenantId` — Tenant id (set automatically after **Register**)\n   - `recipientPhone` — Recipient phone number (format: `5511999999999`)\n\nMost routes use Bearer Token via the `jwtToken` variable. **Register** is public and saves `jwtToken` / `tenantId` from the response.",
+        "description": "Multi-tenant WhatsApp API (Bun + Hono + Baileys 7).\n\n## Setup\n\n1. Import this collection into Postman.\n2. Edit the collection variables:\n   - `baseUrl` — Server URL (default: `http://localhost:9000`)\n   - `jwtToken` — JWT for authenticated routes (use **Register** to obtain one automatically)\n   - `tenantId` — Tenant id (set automatically after **Register**)\n   - `recipientPhone` — Recipient phone number (format: `5511999999999`)\n\nMost routes use Bearer Token via the `jwtToken` variable. **Register** is public and saves `jwtToken` / `tenantId` from the response.",
         "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
     },
     "auth": {
@@ -18,7 +18,7 @@
     "variable": [
         {
             "key": "baseUrl",
-            "value": "http://localhost:6000",
+            "value": "http://localhost:9000",
             "type": "string"
         },
         {

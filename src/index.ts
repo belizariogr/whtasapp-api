@@ -1,10 +1,7 @@
 import './utils/libsignal-logs.ts';
-import { createApp } from './app.ts';
 import { env } from './config/env.ts';
 import { closeDb, verifyDbConnection } from './db/client.ts';
 import { runMigrations } from './db/migrations/runner.ts';
-
-const app = createApp();
 
 try {
     await verifyDbConnection();
@@ -15,6 +12,9 @@ try {
     await closeDb();
     process.exit(1);
 }
+
+const { createApp } = await import('./app.ts');
+const app = createApp();
 
 try {
     Bun.serve({

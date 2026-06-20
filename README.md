@@ -43,7 +43,7 @@ cp .env.example .env
 ### Configuration (.env)
 
 ```env
-PORT=6000
+PORT=9000
 
 # Name shown in WhatsApp when pairing the device (Browsers.baileys)
 WHATSAPP_BROWSER_NAME=wpapi
@@ -57,7 +57,7 @@ DATABASE_PORT=3306
 DATABASE_USER=user
 DATABASE_PASSWORD=password
 DATABASE_NAME=whatsapp_api
-DATABASE_POOL_MAX=10
+DATABASE_POOL_MAX=1
 
 # Action tests (tenant with active WhatsApp connection)
 TEST_TENANT_ID=1
@@ -87,7 +87,7 @@ bun run dev
 bun run start
 ```
 
-Default server: `http://0.0.0.0:6000`
+Default server: `http://0.0.0.0:9000`
 
 ## Authentication
 
@@ -128,12 +128,12 @@ Query parameter `type`:
 
 ```bash
 # PNG (default)
-curl -X POST "http://localhost:6000/login" \
+curl -X POST "http://localhost:9000/login" \
   -H "Authorization: Bearer $TOKEN" \
   --output qrcode.png
 
 # JSON with base64
-curl -X POST "http://localhost:6000/login?type=json" \
+curl -X POST "http://localhost:9000/login?type=json" \
   -H "Authorization: Bearer $TOKEN"
 ```
 
@@ -155,7 +155,7 @@ If the tenant is already logged in, returns `409` with code `ALREADY_LOGGED_IN`.
 Returns the current connection status.
 
 ```bash
-curl http://localhost:6000/status \
+curl http://localhost:9000/status \
   -H "Authorization: Bearer $TOKEN"
 ```
 
@@ -184,7 +184,7 @@ Use `?all=true` to verify the session against the database and attempt reconnect
 Full logout — closes the socket and removes credentials from the database.
 
 ```bash
-curl -X POST http://localhost:6000/logout \
+curl -X POST http://localhost:9000/logout \
   -H "Authorization: Bearer $TOKEN"
 ```
 

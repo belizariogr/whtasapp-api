@@ -11,13 +11,14 @@ function optionalEnv(key: string, fallback: string): string {
 }
 
 export const env = {
-    port: parseInt(optionalEnv('PORT', '6000'), 10),
+    port: parseInt(optionalEnv('PORT', '9000'), 10),
     databaseHost: optionalEnv('DATABASE_HOST', '127.0.0.1'),
     databasePort: parseInt(optionalEnv('DATABASE_PORT', '3306'), 10),
     databaseUsername: optionalEnv('DATABASE_USER', optionalEnv('DATABASE_USERNAME', 'root')),
     databasePassword: optionalEnv('DATABASE_PASSWORD', ''),
     databaseName: optionalEnv('DATABASE_NAME', 'whatsapp_api'),
-    databasePoolMax: parseInt(optionalEnv('DATABASE_POOL_MAX', '10'), 10),
+    /** Default 1: Bun SQL pode travar com pool MySQL > 1 em queries sequenciais (Windows). */
+    databasePoolMax: parseInt(optionalEnv('DATABASE_POOL_MAX', '1'), 10),
     jwtSecretKey: optionalEnv('JWT_SECRET_KEY', 'msdu8nbrdkdhe7'),
     jwtSecretPublicKey: optionalEnv('JWT_SECRET_KEY_PUBLIC', 'msdu8nbrdkdhe7++'),
     jwtAccessTokenTime: parseInt(optionalEnv('JWT_ACCESS_TOKEN_TIME', '10'), 10),

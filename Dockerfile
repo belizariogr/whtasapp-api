@@ -2,6 +2,6 @@ FROM oven/bun:alpine
 
 WORKDIR /usr/app
 
-EXPOSE 6000
+EXPOSE 9000
 
 CMD ["bun", "start"]
